@@ -1,0 +1,788 @@
+{% load custom_filters %}
+<!DOCTYPE html>
+<html lang="{{ session.language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        {% if session.language == 'fr' %}
+            Votre Rapport de Personnalité IA
+        {% elif session.language == 'en' %}
+            Your AI Personality Report
+        {% else %}
+            تقرير شخصيتك بالذكاء الاصطناعي
+        {% endif %}
+    </title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 25px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            overflow: hidden;
+            animation: slideUp 0.8s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .header-content {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+        
+        .header .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .completion-date {
+            font-size: 0.95rem;
+            opacity: 0.8;
+        }
+        
+        .main-content {
+            padding: 40px;
+        }
+        
+        .overview-section {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 40px;
+            margin-bottom: 50px;
+        }
+        
+        .radar-container {
+            background: #f8f9ff;
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .radar-container h3 {
+            margin-bottom: 25px;
+            color: #333;
+            font-size: 1.4rem;
+        }
+        
+        .summary-stats {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            border: 2px solid #f0f0f0;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+        
+        .stat-label {
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .stat-value {
+            font-weight: 700;
+            color: #667eea;
+            font-size: 1.1rem;
+        }
+        
+        .traits-section {
+            margin-bottom: 50px;
+        }
+        
+        .section-title {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+        
+        .trait-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 25px;
+            border-left: 6px solid #667eea;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .trait-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(102, 126, 234, 0.1), transparent);
+            border-radius: 50%;
+            transform: translate(30px, -30px);
+        }
+        
+        .trait-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+        }
+        
+        .trait-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .trait-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .trait-icon {
+            font-size: 1.8rem;
+            color: #667eea;
+        }
+        
+        .trait-score {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .score-number {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #667eea;
+        }
+        
+        .score-level {
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .level-low {
+            background: #ffe6e6;
+            color: #d63384;
+        }
+        
+        .level-moderate {
+            background: #fff3cd;
+            color: #b08800;
+        }
+        
+        .level-high {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .analysis-content {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .analysis-section {
+            margin-bottom: 20px;
+        }
+        
+        .analysis-title {
+            font-weight: 700;
+            color: #555;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .analysis-text {
+            color: #666;
+            line-height: 1.6;
+            padding-left: 25px;
+        }
+        
+        .coaching-section {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .coaching-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 15s linear infinite reverse;
+        }
+        
+        .coaching-content {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .coaching-title {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+        
+        .coaching-reasons {
+            margin: 20px 0;
+        }
+        
+        .coaching-reason {
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 25px;
+            display: inline-block;
+            margin: 5px 10px;
+            font-weight: 500;
+        }
+        
+        .coaching-btn {
+            background: white;
+            color: #ff6b6b;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 20px;
+        }
+        
+        .coaching-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+        
+        .footer {
+            background: #f8f9ff;
+            padding: 30px;
+            text-align: center;
+            color: #666;
+        }
+        
+        .progress-ring {
+            width: 80px;
+            height: 80px;
+            margin: 0 10px;
+        }
+        
+        .progress-ring circle {
+            stroke-width: 8;
+            fill: transparent;
+            r: 30;
+            cx: 40;
+            cy: 40;
+        }
+        
+        .progress-ring .bg {
+            stroke: #f0f0f0;
+        }
+        
+        .progress-ring .progress {
+            stroke: #667eea;
+            stroke-linecap: round;
+            transition: stroke-dasharray 0.5s ease;
+        }
+        
+        /* RTL support */
+        [lang="ar"] {
+            direction: rtl;
+            text-align: right;
+        }
+        
+        [lang="ar"] .trait-card {
+            border-left: none;
+            border-right: 6px solid #667eea;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .overview-section {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+            
+            .header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .main-content {
+                padding: 25px;
+            }
+            
+            .trait-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-content">
+                <h1>
+                    {% if session.language == 'fr' %}
+                        Rapport de Personnalité IA
+                    {% elif session.language == 'en' %}
+                        AI Personality Report
+                    {% else %}
+                        تقرير الشخصية بالذكاء الاصطناعي
+                    {% endif %}
+                </h1>
+                <div class="subtitle">
+                    {% if session.language == 'fr' %}
+                        Analyse Psychologique Détaillée
+                    {% elif session.language == 'en' %}
+                        Detailed Psychological Analysis
+                    {% else %}
+                        تحليل نفسي مفصل
+                    {% endif %}
+                </div>
+                <div class="completion-date">
+                    {% if session.language == 'fr' %}
+                        Complété le {{ session.created_at|date:"d F Y" }}
+                    {% elif session.language == 'en' %}
+                        Completed on {{ session.created_at|date:"F d, Y" }}
+                    {% else %}
+                        تم إكماله في {{ session.created_at|date:"d F Y" }}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Overview Section -->
+            <div class="overview-section">
+                <div class="summary-stats">
+                    <h3>
+                        {% if session.language == 'fr' %}
+                            <i class="fas fa-chart-bar"></i> Résumé de l'Évaluation
+                        {% elif session.language == 'en' %}
+                            <i class="fas fa-chart-bar"></i> Assessment Summary
+                        {% else %}
+                            <i class="fas fa-chart-bar"></i> ملخص التقييم
+                        {% endif %}
+                    </h3>
+                    
+                    <div class="stat-item">
+                        <span class="stat-label">
+                            {% if session.language == 'fr' %}
+                                Traits Évalués
+                            {% elif session.language == 'en' %}
+                                Traits Assessed
+                            {% else %}
+                                السمات المقيمة
+                            {% endif %}
+                        </span>
+                        <span class="stat-value">{{ results|length }}</span>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <span class="stat-label">
+                            {% if session.language == 'fr' %}
+                                Questions Répondues
+                            {% elif session.language == 'en' %}
+                                Questions Answered
+                            {% else %}
+                                الأسئلة المجابة
+                            {% endif %}
+                        </span>
+                        <span class="stat-value">
+                            {% for trait, data in results.items %}
+                                {{ data.num_questions|add:0 }}{% if not forloop.last %} + {% endif %}
+                            {% endfor %}
+                        </span>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <span class="stat-label">
+                            {% if session.language == 'fr' %}
+                                Score Moyen Global
+                            {% elif session.language == 'en' %}
+                                Overall Average Score
+                            {% else %}
+                                النتيجة المتوسطة الإجمالية
+                            {% endif %}
+                        </span>
+                        <span class="stat-value">
+                            {% with total=0 count=0 %}
+                                {% for trait, data in results.items %}
+                                    {% with total=total|add:data.mean_score count=count|add:1 %}
+                                    {% endwith %}
+                                {% endfor %}
+                                {{ total|floatformat:1 }}/5
+                            {% endwith %}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="radar-container">
+                    <h3>
+                        {% if session.language == 'fr' %}
+                            Profil de Personnalité
+                        {% elif session.language == 'en' %}
+                            Personality Profile
+                        {% else %}
+                            ملف الشخصية
+                        {% endif %}
+                    </h3>
+                    <canvas id="personalityChart" width="300" height="300"></canvas>
+                </div>
+            </div>
+
+            <!-- Detailed Traits Analysis -->
+            <div class="traits-section">
+                <h2 class="section-title">
+                    {% if session.language == 'fr' %}
+                        Analyse Détaillée des Traits
+                    {% elif session.language == 'en' %}
+                        Detailed Traits Analysis
+                    {% else %}
+                        تحليل مفصل للسمات
+                    {% endif %}
+                </h2>
+
+                {% for trait, data in results.items %}
+                <div class="trait-card">
+                    <div class="trait-header">
+                        <div class="trait-name">
+                            {% if trait == 'ouverture' %}
+                                <i class="fas fa-lightbulb trait-icon"></i>
+                            {% elif trait == 'conscienciosité' %}
+                                <i class="fas fa-tasks trait-icon"></i>
+                            {% elif trait == 'extraversion' %}
+                                <i class="fas fa-users trait-icon"></i>
+                            {% elif trait == 'agréabilité' %}
+                                <i class="fas fa-heart trait-icon"></i>
+                            {% elif trait == 'stabilité émotionnelle' %}
+                                <i class="fas fa-balance-scale trait-icon"></i>
+                            {% endif %}
+                            {{ traits_config|get_item:trait|get_item:session.language }}
+                        </div>
+                        <div class="trait-score">
+                            <span class="score-number">{{ data.mean_score|floatformat:1 }}</span>
+                            <span class="score-level {% if data.mean_score <= 2.5 %}level-low{% elif data.mean_score <= 3.5 %}level-moderate{% else %}level-high{% endif %}">
+                                {{ data.level }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="analysis-content">
+                        <div class="analysis-section">
+                            <div class="analysis-title">
+                                <i class="fas fa-eye"></i>
+                                {% if session.language == 'fr' %}
+                                    Observations Principales
+                                {% elif session.language == 'en' %}
+                                    Main Observations
+                                {% else %}
+                                    الملاحظات الرئيسية
+                                {% endif %}
+                            </div>
+                            <div class="analysis-text">{{ data.analysis.observations }}</div>
+                        </div>
+
+                        <div class="analysis-section">
+                            <div class="analysis-title">
+                                <i class="fas fa-calculator"></i>
+                                {% if session.language == 'fr' %}
+                                    Raisons du Score
+                                {% elif session.language == 'en' %}
+                                    Score Reasoning
+                                {% else %}
+                                    أسباب النتيجة
+                                {% endif %}
+                            </div>
+                            <div class="analysis-text">{{ data.analysis.score_reasoning }}</div>
+                        </div>
+
+                        <div class="analysis-section">
+                            <div class="analysis-title">
+                                <i class="fas fa-star"></i>
+                                {% if session.language == 'fr' %}
+                                    Points Forts
+                                {% elif session.language == 'en' %}
+                                    Strengths
+                                {% else %}
+                                    نقاط القوة
+                                {% endif %}
+                            </div>
+                            <div class="analysis-text">{{ data.analysis.strengths }}</div>
+                        </div>
+
+                        <div class="analysis-section">
+                            <div class="analysis-title">
+                                <i class="fas fa-arrow-up"></i>
+                                {% if session.language == 'fr' %}
+                                    Zones d'Amélioration
+                                {% elif session.language == 'en' %}
+                                    Areas for Improvement
+                                {% else %}
+                                    مناطق للتحسين
+                                {% endif %}
+                            </div>
+                            <div class="analysis-text">{{ data.analysis.areas_for_improvement }}</div>
+                        </div>
+
+                        <div class="analysis-section">
+                            <div class="analysis-title">
+                                <i class="fas fa-lightbulb"></i>
+                                {% if session.language == 'fr' %}
+                                    Conseils Pratiques
+                                {% elif session.language == 'en' %}
+                                    Practical Advice
+                                {% else %}
+                                    نصائح عملية
+                                {% endif %}
+                            </div>
+                            <div class="analysis-text">{{ data.analysis.advice }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Coaching Recommendation -->
+            {% if coaching_recommendation.should_recommend %}
+            <div class="coaching-section">
+                <div class="coaching-content">
+                    <div class="coaching-title">
+                        <i class="fas fa-user-tie"></i>
+                        {% if session.language == 'fr' %}
+                            Recommandation de Coaching
+                        {% elif session.language == 'en' %}
+                            Coaching Recommendation
+                        {% else %}
+                            توصية التدريب
+                        {% endif %}
+                    </div>
+                    
+                    <p>{{ coaching_recommendation.message }}</p>
+                    
+                    {% if coaching_recommendation.reasons %}
+                    <div class="coaching-reasons">
+                        {% if session.language == 'fr' %}
+                            <strong>Domaines d'intérêt :</strong>
+                        {% elif session.language == 'en' %}
+                            <strong>Areas of focus:</strong>
+                        {% else %}
+                            <strong>مجالات التركيز:</strong>
+                        {% endif %}
+                        {% for reason in coaching_recommendation.reasons %}
+                            <span class="coaching-reason">{{ reason }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <a href="#" class="coaching-btn">
+                        <i class="fas fa-calendar-plus"></i>
+                        {% if session.language == 'fr' %}
+                            Réserver une Session
+                        {% elif session.language == 'en' %}
+                            Book a Session
+                        {% else %}
+                            احجز جلسة
+                        {% endif %}
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>
+                {% if session.language == 'fr' %}
+                    <i class="fas fa-robot"></i> Généré par IA • Rapport confidentiel • NextMind AI Coaching
+                {% elif session.language == 'en' %}
+                    <i class="fas fa-robot"></i> AI Generated • Confidential Report • NextMind AI Coaching
+                {% else %}
+                    <i class="fas fa-robot"></i> مُولد بالذكاء الاصطناعي • تقرير سري • NextMind AI Coaching
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Personality Radar Chart
+        const ctx = document.getElementById('personalityChart').getContext('2d');
+        
+        const traitLabels = [
+            {% for trait, data in results.items %}
+                "{{ traits_config|get_item:trait|get_item:session.language|safe }}"{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+        
+        const traitScores = [
+            {% for trait, data in results.items %}
+                {{ data.mean_score|floatformat:1 }}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        const data = {
+            labels: traitLabels,
+            datasets: [{
+                label: '{% if session.language == "fr" %}Score{% elif session.language == "en" %}Score{% else %}النتيجة{% endif %}',
+                data: traitScores,
+                backgroundColor: 'rgba(102, 126, 234, 0.2)',
+                borderColor: 'rgba(102, 126, 234, 1)',
+                borderWidth: 3,
+                pointBackgroundColor: 'rgba(102, 126, 234, 1)',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 6
+            }]
+        };
+
+        const config = {
+            type: 'radar',
+            data: data,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 5,
+                        min: 0,
+                        ticks: {
+                            stepSize: 1,
+                            font: {
+                                size: 12
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        },
+                        pointLabels: {
+                            font: {
+                                size: 11,
+                                weight: 'bold'
+                            },
+                            color: '#333'
+                        }
+                    }
+                },
+                elements: {
+                    line: {
+                        borderWidth: 3
+                    }
+                }
+            }
+        };
+
+        new Chart(ctx, config);
+
+        // Add smooth animations
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.trait-card');
+            cards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+                card.classList.add('animate');
+            });
+        });
+    </script>
+</body>
+</html>

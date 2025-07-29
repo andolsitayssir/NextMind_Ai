@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="{{ session.language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NextMind Assessment - {{ current_trait|title }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .quiz-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 650px;
+            width: 100%;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            animation: containerAppear 0.8s ease-out;
+        }
+
+        @keyframes containerAppear {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Header Section */
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        /* Assessment Title - Big and Animated */
+        .assessment-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            animation: titlePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes titlePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .assessment-subtitle {
+            font-size: 1rem;
+            color: #6c7293;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Trait Analysis Section - Smaller and Simple */
+        .trait-analysis {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(240, 147, 251, 0.05));
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: #6c7293;
+            text-align: center;
+            font-weight: 400;
+        }
+
+        /* Progress Section */
+        .progress-section {
+            margin-bottom: 2rem;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.8rem;
+        }
+
+        .progress-text {
+            font-size: 0.9rem;
+            color: #8b5fbf;
+            font-weight: 600;
+        }
+
+        .progress-percentage {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 10px;
+            background: linear-gradient(90deg, #f8f9ff, #e8ecff);
+            border-radius: 25px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #667eea, #764ba2, #f093fb, #a8edea);
+            background-size: 300% 300%;
+            border-radius: 25px;
+            transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: progressGlow 3s ease-in-out infinite;
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes progressGlow {
+            0%, 100% { background-position: 0% 50%; box-shadow: 0 0 20px rgba(102, 126, 234, 0.3); }
+            50% { background-position: 100% 50%; box-shadow: 0 0 25px rgba(240, 147, 251, 0.4); }
+        }
+
+        .progress-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+            animation: progressShine 2s infinite;
+        }
+
+        @keyframes progressShine {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        /* Question Section */
+        .question-section {
+            margin-bottom: 1.5rem;
+            animation: questionFade 0.8s ease-out 0.5s both;
+        }
+
+        @keyframes questionFade {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .question-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #4a4f6a;
+            margin-bottom: 1.2rem;
+            line-height: 1.7;
+            text-align: center;
+            padding: 1rem;
+            background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(248,249,255,0.9));
+            border-radius: 12px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .answer-input {
+            width: 100%;
+            min-height: 120px;
+            padding: 1.2rem;
+            border: 2px solid #e1e8ff;
+            border-radius: 15px;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: vertical;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(248,249,255,0.7));
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            outline: none;
+            color: #4a4f6a;
+            line-height: 1.6;
+        }
+
+        .answer-input::placeholder {
+            color: #a0a8c4;
+            font-style: italic;
+        }
+
+        .answer-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1), 0 8px 25px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+            background: rgba(255,255,255,0.95);
+        }
+
+        /* Button Section */
+        .buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .btn-primary {
+            padding: 0.9rem 2.5rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+            background: linear-gradient(135deg, #5a6fd8, #6a42a0);
+        }
+
+        .btn-primary:active {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        /* Loading State */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .spinner {
+            border: 4px solid rgba(102, 126, 234, 0.1);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 1rem;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        /* Error Message */
+        .error-message {
+            color: #e74c3c;
+            background: linear-gradient(135deg, rgba(231, 76, 60, 0.1), rgba(255, 255, 255, 0.9));
+            padding: 1rem 1.2rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: none;
+            border-left: 4px solid #e74c3c;
+            font-weight: 500;
+        }
+
+        /* Remove debug info in production */
+        .debug-info {
+            display: none;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .quiz-container {
+                padding: 1.5rem;
+                margin: 15px;
+                max-width: 100%;
+            }
+
+            .assessment-title {
+                font-size: 2rem;
+                letter-spacing: 1px;
+            }
+
+            .question-text {
+                font-size: 1.1rem;
+                padding: 0.8rem;
+            }
+
+            .answer-input {
+                min-height: 100px;
+                padding: 1rem;
+            }
+
+            .btn-primary {
+                padding: 0.8rem 2rem;
+                font-size: 0.95rem;
+            }
+        }
+
+        /* Accessibility improvements */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <!-- Quiz Header -->
+        <div class="quiz-header">
+            <!-- Assessment Title - Big and Animated -->
+            <h1 class="assessment-title">
+                {% if session.language == 'fr' %}
+                    {% if current_assessment == 'big_five' %}Big Five
+                    {% elif current_assessment == 'disc' %}DISC
+                    {% elif current_assessment == 'bien_etre' %}Bien-être
+                    {% elif current_assessment == 'resilience_ie' %}Résilience & IE
+                    {% else %}{{ current_assessment|title }}
+                    {% endif %}
+                {% elif session.language == 'en' %}
+                    {% if current_assessment == 'big_five' %}Big Five
+                    {% elif current_assessment == 'disc' %}DISC
+                    {% elif current_assessment == 'bien_etre' %}Well-being
+                    {% elif current_assessment == 'resilience_ie' %}Resilience & EI
+                    {% else %}{{ current_assessment|title }}
+                    {% endif %}
+                {% else %}
+                    {% if current_assessment == 'big_five' %}العوامل الخمسة
+                    {% elif current_assessment == 'disc' %}DISC
+                    {% elif current_assessment == 'bien_etre' %}الرفاهة
+                    {% elif current_assessment == 'resilience_ie' %}المرونة والذكاء العاطفي
+                    {% else %}{{ current_assessment|title }}
+                    {% endif %}
+                {% endif %}
+            </h1>
+            
+            <p class="assessment-subtitle">
+                {% if session.language == 'fr' %}
+                    Question {{ session.current_question_number }}
+                {% elif session.language == 'en' %}
+                    Question {{ session.current_question_number }}
+                {% else %}
+                    السؤال {{ session.current_question_number }}
+                {% endif %}
+            </p>
+        </div>
+
+        <!-- Progress Section -->
+        <div class="progress-section">
+            <div class="progress-info">
+                <span class="progress-text">
+                    {% if session.language == 'fr' %}Progression{% elif session.language == 'en' %}Progress{% else %}التقدم{% endif %}
+                </span>
+                <span class="progress-percentage">{{ progress }}%</span>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" style="width: {{ progress }}%"></div>
+            </div>
+        </div>
+
+        <!-- Trait Analysis Section - Smaller and Simple -->
+        {% if trait_intro %}
+        <div class="trait-analysis">
+            {{ trait_intro }}
+        </div>
+        {% endif %}
+
+        <!-- Error Message -->
+        <div id="error-message" class="error-message"></div>
+
+        <!-- Question Section -->
+        <div class="question-section">
+            <div class="question-text">
+                {% if question %}
+                    {{ question }}
+                {% else %}
+                    <em>
+                        {% if session.language == 'fr' %}Question en cours de chargement...
+                        {% elif session.language == 'en' %}Question loading...
+                        {% else %}جاري تحميل السؤال...
+                        {% endif %}
+                    </em>
+                {% endif %}
+            </div>
+            
+            <form id="quiz-form" method="post">
+                {% csrf_token %}
+                <textarea 
+                    name="answer" 
+                    id="answer-input"
+                    class="answer-input" 
+                    placeholder="{% if session.language == 'fr' %}Partagez vos pensées et expériences ici...{% elif session.language == 'en' %}Share your thoughts and experiences here...{% else %}شاركنا أفكارك وتجاربك هنا...{% endif %}"
+                    required
+                    maxlength="1000"
+                ></textarea>
+                
+                <div class="buttons">
+                    <button type="submit" class="btn-primary" id="submit-btn">
+                        {% if session.language == 'fr' %}
+                            Continuer ✨
+                        {% elif session.language == 'en' %}
+                            Continue ✨
+                        {% else %}
+                            متابعة ✨
+                        {% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p class="loading-text">
+                {% if session.language == 'fr' %}
+                    Analyse de votre réponse en cours...
+                {% elif session.language == 'en' %}
+                    Analyzing your response...
+                {% else %}
+                    جاري تحليل إجابتك...
+                {% endif %}
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Auto-adjust textarea height
+        const textarea = document.getElementById('answer-input');
+        
+        function adjustTextareaHeight() {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.max(120, textarea.scrollHeight) + 'px';
+        }
+        
+        textarea.addEventListener('input', adjustTextareaHeight);
+        
+        // Form submission with enhanced UX
+        document.getElementById('quiz-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const answerInput = document.getElementById('answer-input');
+            const answer = answerInput.value.trim();
+            
+            if (!answer) {
+                showError('{% if session.language == "fr" %}Veuillez saisir votre réponse pour continuer{% elif session.language == "en" %}Please enter your answer to continue{% else %}يرجى إدخال إجابتك للمتابعة{% endif %}');
+                answerInput.focus();
+                return;
+            }
+            
+            if (answer.length < 10) {
+                showError('{% if session.language == "fr" %}Veuillez donner une réponse plus détaillée (au moins 10 caractères){% elif session.language == "en" %}Please provide a more detailed answer (at least 10 characters){% else %}يرجى تقديم إجابة أكثر تفصيلاً (10 أحرف على الأقل){% endif %}');
+                answerInput.focus();
+                return;
+            }
+            
+            showLoading();
+            
+            const formData = new FormData();
+            formData.append('answer', answer);
+            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+            
+            fetch(window.location.href, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideLoading();
+                
+                if (data.error) {
+                    showError(data.error);
+                } else if (data.completed) {
+                    // Add completion animation before redirect
+                    document.querySelector('.quiz-container').style.animation = 'containerDisappear 0.5s ease-in forwards';
+                    setTimeout(() => {
+                        window.location.href = data.redirect;
+                    }, 500);
+                } else if (data.success) {
+                    // Smooth transition to next question
+                    document.querySelector('.question-section').style.animation = 'questionFade 0.3s ease-out reverse';
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 300);
+                }
+            })
+            .catch(error => {
+                hideLoading();
+                console.error('Error:', error);
+                showError('{% if session.language == "fr" %}Une erreur technique est survenue. Veuillez réessayer.{% elif session.language == "en" %}A technical error occurred. Please try again.{% else %}حدث خطأ تقني. يرجى المحاولة مرة أخرى.{% endif %}');
+            });
+        });
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            errorDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            
+            // Auto-hide after 6 seconds
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 6000);
+        }
+        
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('quiz-form').style.display = 'none';
+            document.querySelector('.progress-section').style.opacity = '0.5';
+        }
+        
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('quiz-form').style.display = 'block';
+            document.querySelector('.progress-section').style.opacity = '1';
+        }
+        
+        // Focus management
+        window.addEventListener('load', function() {
+            textarea.focus();
+            adjustTextareaHeight();
+        });
+        
+        // Add completion animation keyframes
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes containerDisappear {
+                to {
+                    opacity: 0;
+                    transform: translateY(-20px) scale(0.98);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Smooth progress bar animation on page load
+        setTimeout(() => {
+            const progressBar = document.querySelector('.progress-bar-fill');
+            progressBar.style.width = '{{ progress }}%';
+        }, 200);
+    </script>
+</body>
+</html>
