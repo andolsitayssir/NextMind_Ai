@@ -472,119 +472,78 @@
     </div>
 
     <script>
-        // Auto-adjust textarea height
-        const textarea = document.getElementById('answer-input');
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('quiz-form');
+    const continueBtn = document.querySelector('.btn-primary');
+    const answerInput = document.getElementById('answer-input');
+    const errorDiv = document.getElementById('error-message');
+    const loadingDiv = document.querySelector('.loading');
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
         
-        function adjustTextareaHeight() {
-            textarea.style.height = 'auto';
-            textarea.style.height = Math.max(120, textarea.scrollHeight) + 'px';
+        const answer = answerInput.value.trim();
+        if (!answer) {
+            showError('{% if session.language == "fr" %}Veuillez saisir une réponse{% elif session.language == "en" %}Please enter an answer{% else %}يرجى إدخال إجابة{% endif %}');
+            return;
         }
+
+        // Show loading state
+        continueBtn.disabled = true;
+        continueBtn.textContent = '{% if session.language == "fr" %}En cours...{% elif session.language == "en" %}Processing...{% else %}جاري المعالجة...{% endif %}';
         
-        textarea.addEventListener('input', adjustTextareaHeight);
+        // Hide error message
+        hideError();
+
+        const formData = new FormData(form);
         
-        // Form submission with enhanced UX
-        document.getElementById('quiz-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const answerInput = document.getElementById('answer-input');
-            const answer = answerInput.value.trim();
-            
-            if (!answer) {
-                showError('{% if session.language == "fr" %}Veuillez saisir votre réponse pour continuer{% elif session.language == "en" %}Please enter your answer to continue{% else %}يرجى إدخال إجابتك للمتابعة{% endif %}');
-                answerInput.focus();
-                return;
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
             }
-            
-            if (answer.length < 10) {
-                showError('{% if session.language == "fr" %}Veuillez donner une réponse plus détaillée (au moins 10 caractères){% elif session.language == "en" %}Please provide a more detailed answer (at least 10 characters){% else %}يرجى تقديم إجابة أكثر تفصيلاً (10 أحرف على الأقل){% endif %}');
-                answerInput.focus();
-                return;
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
             }
-            
-            showLoading();
-            
-            const formData = new FormData();
-            formData.append('answer', answer);
-            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
-            
-            fetch(window.location.href, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                hideLoading();
-                
-                if (data.error) {
-                    showError(data.error);
-                } else if (data.completed) {
-                    // Add completion animation before redirect
-                    document.querySelector('.quiz-container').style.animation = 'containerDisappear 0.5s ease-in forwards';
-                    setTimeout(() => {
-                        window.location.href = data.redirect;
-                    }, 500);
-                } else if (data.success) {
-                    // Smooth transition to next question
-                    document.querySelector('.question-section').style.animation = 'questionFade 0.3s ease-out reverse';
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 300);
-                }
-            })
-            .catch(error => {
-                hideLoading();
-                console.error('Error:', error);
-                showError('{% if session.language == "fr" %}Une erreur technique est survenue. Veuillez réessayer.{% elif session.language == "en" %}A technical error occurred. Please try again.{% else %}حدث خطأ تقني. يرجى المحاولة مرة أخرى.{% endif %}');
-            });
+            return response.json();
+        })
+        .then(data => {
+            if (data.error) {
+                showError(data.error);
+                resetButton();
+            } else if (data.completed) {
+                window.location.href = data.redirect;
+            } else if (data.success) {
+                window.location.reload();
+            } else {
+                showError('{% if session.language == "fr" %}Erreur inattendue{% elif session.language == "en" %}Unexpected error{% else %}خطأ غير متوقع{% endif %}');
+                resetButton();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showError('{% if session.language == "fr" %}Erreur de connexion. Veuillez réessayer.{% elif session.language == "en" %}Connection error. Please try again.{% else %}خطأ في الاتصال. يرجى المحاولة مرة أخرى.{% endif %}');
+            resetButton();
         });
-        
-        function showError(message) {
-            const errorDiv = document.getElementById('error-message');
-            errorDiv.textContent = message;
-            errorDiv.style.display = 'block';
-            errorDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            
-            // Auto-hide after 6 seconds
-            setTimeout(() => {
-                errorDiv.style.display = 'none';
-            }, 6000);
-        }
-        
-        function showLoading() {
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('quiz-form').style.display = 'none';
-            document.querySelector('.progress-section').style.opacity = '0.5';
-        }
-        
-        function hideLoading() {
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('quiz-form').style.display = 'block';
-            document.querySelector('.progress-section').style.opacity = '1';
-        }
-        
-        // Focus management
-        window.addEventListener('load', function() {
-            textarea.focus();
-            adjustTextareaHeight();
-        });
-        
-        // Add completion animation keyframes
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes containerDisappear {
-                to {
-                    opacity: 0;
-                    transform: translateY(-20px) scale(0.98);
-                }
-            }
-        `;
-        document.head.appendChild(style);
-        
-        // Smooth progress bar animation on page load
-        setTimeout(() => {
-            const progressBar = document.querySelector('.progress-bar-fill');
-            progressBar.style.width = '{{ progress }}%';
-        }, 200);
+    });
+
+    function showError(message) {
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+    }
+
+    function hideError() {
+        errorDiv.style.display = 'none';
+    }
+
+    function resetButton() {
+        continueBtn.disabled = false;
+        continueBtn.innerHTML = '{% if session.language == "fr" %}Continuer ✨{% elif session.language == "en" %}Continue ✨{% else %}متابعة ✨{% endif %}';
+    }
+});
     </script>
 </body>
 </html>

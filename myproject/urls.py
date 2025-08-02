@@ -17,11 +17,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from questionnaire import views
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.choose_language, name='choose_language'),
-    path('quiz/<int:session_id>/', views.adaptive_quiz, name='quiz'),
-    path('report/<int:session_id>/', views.report, name='report'),
-
+    path('quiz/', views.quiz, name='quiz'),
+    path('report/', views.report, name='report'),
 ]
 

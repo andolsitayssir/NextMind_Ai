@@ -1,377 +1,618 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, redirect
 from django.http import JsonResponse
-from .models import UserSession, Question, Answer, AssessmentResult
+import json
+import random
+import time
+from datetime import datetime
 from .utils import (
-    generate_adaptive_question, 
-    analyze_and_score_answer, 
-    should_ask_followup_question,
+    generate_question, 
+    analyze_answer,
     get_trait_intro,
-    TRAITS_CONFIG,
     ASSESSMENT_STRUCTURE,
     generate_detailed_analysis,
     should_recommend_coaching,
-    get_level_from_score
+    get_behavioral_questions  # Import our behavioral questions function
 )
-import json
 
-# Assessment order: Big Five -> DISC -> Well-being -> Resilience
-ASSESSMENT_ORDER = ["big_five", "disc", "bien_etre", "resilience_ie"]
-
-# Big Five traits in order
-TRAITS_BIG5 = ["ouverture", "conscienciosité", "extraversion", "agréabilité", "stabilité émotionnelle"]
-DISC_STYLES = ["dominant", "influent", "stable", "conforme"]
+# Assessment configuration - 3 questions per trait/dimension
+ASSESSMENTS = {
+    'big_five': {
+        'traits': ['ouverture', 'conscienciosité', 'extraversion', 'agréabilité', 'stabilité émotionnelle'],
+        'questions_per_trait': 3,
+        'order': 1
+    },
+    'disc': {
+        'traits': ['dominant', 'influent', 'stable', 'conforme'],
+        'questions_per_trait': 3,
+        'order': 2
+    },
+    'bien_etre': {
+        'questions_total': 3,
+        'order': 3
+    },
+    'resilience_ie': {
+        'questions_total': 3,
+        'order': 4
+    }
+}
 
 def choose_language(request):
     if request.method == "POST":
         lang = request.POST.get("language", "fr")
-        session = UserSession.objects.create(
-            language=lang,
-            current_assessment="big_five",
-            current_trait=TRAITS_BIG5[0],
-            current_question_number=1
-        )
-        return redirect('quiz', session_id=session.id)
+        
+        # Initialize comprehensive session data
+        request.session['user_data'] = {
+            'language': lang,
+            'start_time': time.time(),
+            'current_assessment': 'big_five',
+            'current_trait': ASSESSMENTS['big_five']['traits'][0],
+            'current_question_number': 1,
+            'is_completed': False,
+            'responses': [],
+            'psychological_profile': {
+                'response_times': [],
+                'answer_lengths': [],
+                'emotional_patterns': [],
+                'consistency_scores': []
+            },
+            'assessment_progress': {
+                'big_five': {'completed_traits': [], 'current_trait_index': 0},
+                'disc': {'completed_traits': [], 'current_trait_index': 0},
+                'bien_etre': {'questions_completed': 0},
+                'resilience_ie': {'questions_completed': 0}
+            },
+            'results': {}
+        }
+        
+        return redirect('quiz')
     
     return render(request, 'choose_language.html')
 
-def adaptive_quiz(request, session_id):
-    session = get_object_or_404(UserSession, id=session_id)
+def quiz(request):
+    # Check if session exists
+    if 'user_data' not in request.session:
+        return redirect('choose_language')
     
-    if session.is_completed:
-        return redirect('report', session_id=session.id)
+    user_data = request.session['user_data']
+    
+    if user_data['is_completed']:
+        return redirect('report')
     
     if request.method == "POST":
-        answer_text = request.POST.get("answer", "").strip()
+        # Capture behavioral metrics
+        answer_text = request.POST.get('answer', '').strip()
+        response_time = time.time() - user_data.get('question_start_time', time.time())
+        
         if not answer_text:
-            return JsonResponse({"error": "Answer is required"}, status=400)
+            return JsonResponse({'error': 'Answer required'}, status=400)
         
-        # Get current question
-        current_question = Question.objects.filter(
-            session=session,
-            trait=session.current_trait,
-            assessment_type=session.current_assessment,
-            question_number=session.current_question_number
-        ).first()
+        # Enhanced behavioral analysis
+        current_assessment = user_data['current_assessment']
+        current_trait = user_data.get('current_trait', 'general')
         
-        if not current_question:
-            return JsonResponse({"error": "No current question found"}, status=400)
+        # Get previous responses for context
+        previous_responses = [r for r in user_data['responses'] 
+                            if r.get('trait') == current_trait and r.get('assessment') == current_assessment]
         
-        # Get all previous answers for this trait
-        previous_answers = Answer.objects.filter(
-            question__session=session,
-            question__trait=session.current_trait,
-            question__assessment_type=session.current_assessment
-        ).values_list('text', flat=True)
+        # Behavioral scoring using optimized function
+        try:
+            score = analyze_answer(
+                answer_text=answer_text,
+                trait=current_trait,
+                all_answers_for_trait=[r['text'] for r in previous_responses],
+                language=user_data['language'],
+                assessment_type=current_assessment
+            )
+        except Exception as e:
+            # Fallback scoring based on answer quality indicators
+            score = calculate_fallback_score(answer_text)
         
-        # Score the answer
-        score = analyze_and_score_answer(
-            answer_text, 
-            session.current_trait, 
-            list(previous_answers), 
-            session.language, 
-            session.current_assessment
-        )
+        # Analyze behavioral patterns
+        emotional_tone = analyze_behavioral_tone(answer_text, response_time)
+        engagement_level = analyze_response_quality(answer_text, response_time)
         
-        # Save the answer
-        Answer.objects.create(
-            question=current_question,
-            text=answer_text,
-            score=score
-        )
+        # Store comprehensive response data
+        response_data = {
+            'assessment': current_assessment,
+            'trait': current_trait,
+            'question_number': user_data['current_question_number'],
+            'text': answer_text,
+            'score': score,
+            'response_time': response_time,
+            'timestamp': datetime.now().isoformat(),
+            'emotional_tone': emotional_tone,
+            'engagement_level': engagement_level,
+            'answer_length': len(answer_text)
+        }
+        
+        user_data['responses'].append(response_data)
+        
+        # Update psychological profile
+        user_data['psychological_profile']['response_times'].append(response_time)
+        user_data['psychological_profile']['answer_lengths'].append(len(answer_text))
+        user_data['psychological_profile']['emotional_patterns'].append(emotional_tone)
         
         # Determine next step
-        should_continue = should_ask_followup_question(
-            session.current_trait,
-            session.current_question_number,
-            answer_text,
-            session.language,
-            session.current_assessment
-        )
-        
-        if should_continue:
-            # Ask another question for the same trait
-            session.current_question_number += 1
-            session.save()
-        else:
-            # Move to next trait/assessment
-            next_trait, next_assessment = get_next_trait_or_assessment(session)
-            if next_trait and next_assessment:
-                session.current_trait = next_trait
-                session.current_assessment = next_assessment
-                session.current_question_number = 1
-                session.save()
+        try:
+            next_step = get_next_step(user_data)
+            
+            if next_step.get('completed', False):
+                user_data['is_completed'] = True
+                request.session['user_data'] = user_data
+                return JsonResponse({'completed': True, 'redirect': '/report/'})
             else:
-                # Complete assessment
-                session.is_completed = True
-                session.save()
-                generate_final_results(session)
-                return JsonResponse({"completed": True, "redirect": f"/report/{session.id}/"})
-        
-        return JsonResponse({"success": True})
+                # Update session with next step
+                user_data.update(next_step)
+                request.session['user_data'] = user_data
+                request.session.modified = True
+                return JsonResponse({'success': True})
+                
+        except Exception as e:
+            # Fallback: progress naturally
+            if user_data['current_question_number'] < 3:
+                user_data['current_question_number'] += 1
+            else:
+                user_data['is_completed'] = True
+            
+            request.session['user_data'] = user_data
+            request.session.modified = True
+            
+            if user_data['is_completed']:
+                return JsonResponse({'completed': True, 'redirect': '/report/'})
+            else:
+                return JsonResponse({'success': True})
     
-    # GET request - show current question
-    print(f"🔍 DEBUG: Starting question generation...")
-    print(f"   - Trait: {session.current_trait}")
-    print(f"   - Question Number: {session.current_question_number}")
-    print(f"   - Language: {session.language}")
-    print(f"   - Assessment Type: {session.current_assessment}")
+    # Generate next question using optimized system
+    current_assessment = user_data['current_assessment']
+    current_trait = user_data.get('current_trait', 'general')
+    question_number = user_data['current_question_number']
     
-    previous_answers = get_previous_answers_for_trait(session)
-    print(f"   - Previous Answers Count: {len(previous_answers)}")
+    # Get previous responses for context
+    previous_responses = [r for r in user_data['responses'] 
+                        if r.get('trait') == current_trait and r.get('assessment') == current_assessment]
     
+    # Generate behavioral question using optimized function
     try:
-        question_text = generate_adaptive_question(
-            session.current_trait,
-            session.current_question_number,
-            previous_answers,
-            session.language,
-            session.current_assessment
+        question_text = generate_question(
+            trait=current_trait,
+            question_number=question_number,
+            previous_answers=[r['text'] for r in previous_responses],
+            language=user_data['language'],
+            assessment_type=current_assessment
         )
-        print(f"✅ Generated Question: {question_text}")
     except Exception as e:
-        print(f"❌ Question Generation Failed: {str(e)}")
-        print(f"   Exception Type: {type(e)}")
-        import traceback
-        traceback.print_exc()
-        # Use a fallback question
-        question_text = f"Please describe your experience with {session.current_trait}."
+        # Use behavioral fallback instead of story questions
+        question_text = get_behavioral_questions(
+            trait=current_trait,
+            question_number=question_number,
+            previous_answers=[r['text'] for r in previous_responses],
+            language=user_data['language'],
+            assessment_type=current_assessment
+        )
     
-    # Save question
-    Question.objects.create(
-        session=session,
-        text=question_text,
-        trait=session.current_trait,
-        assessment_type=session.current_assessment,
-        question_number=session.current_question_number
-    )
-    
-    # Get trait introduction
-    trait_intro = get_trait_intro(session.current_trait, session.language, session.current_assessment)
+    # Store question start time for response time tracking
+    user_data['question_start_time'] = time.time()
+    request.session['user_data'] = user_data
     
     # Calculate progress
-    progress = calculate_progress(session)
+    total_questions = calculate_total_questions()
+    completed_questions = len(user_data['responses'])
+    progress_percentage = (completed_questions / total_questions) * 100
+    
+    # Get trait introduction
+    try:
+        trait_intro = get_trait_intro(current_trait, user_data['language'], current_assessment)
+    except:
+        trait_intro = ""
     
     context = {
-        'session': session,
+        'session': {
+            'language': user_data['language'],
+            'current_assessment': current_assessment,
+            'current_trait': current_trait,
+            'current_question_number': question_number,
+        },
         'question': question_text,
+        'progress': int(progress_percentage),
         'trait_intro': trait_intro,
-        'progress': progress,
-        'current_trait': session.current_trait,
-        'current_assessment': session.current_assessment
+        'current_assessment': current_assessment,
+        'trait_progress': f"{question_number}/{ASSESSMENTS[current_assessment].get('questions_per_trait', 3)}",
+        'assessment_name': get_assessment_name(current_assessment, user_data['language'])
     }
-    
-    print(f"🔍 DEBUG: Template context:")
-    print(f"   - question: '{context['question']}'")
-    print(f"   - trait_intro: '{context['trait_intro']}'")
-    print(f"   - progress: {context['progress']}")
     
     return render(request, 'quiz.html', context)
 
-def get_previous_answers_for_trait(session):
-    """Get previous answers for current trait"""
-    return list(Answer.objects.filter(
-        question__session=session,
-        question__trait=session.current_trait,
-        question__assessment_type=session.current_assessment
-    ).values_list('text', flat=True))
-
-def get_next_trait_or_assessment(session):
-    """Determine next trait or assessment based on current progress"""
-    current_assessment = session.current_assessment
-    current_trait = session.current_trait
+def calculate_fallback_score(answer_text):
+    """Improved fallback scoring based on behavioral indicators"""
+    if not answer_text.strip():
+        return 1
     
-    if current_assessment == "big_five":
-        current_index = TRAITS_BIG5.index(current_trait)
-        if current_index < len(TRAITS_BIG5) - 1:
-            return TRAITS_BIG5[current_index + 1], "big_five"
+    # Score based on behavioral content quality
+    behavioral_words = ['décide', 'stratégie', 'approche', 'méthode', 'gère', 'organise', 'planifie', 'adapte']
+    answer_lower = answer_text.lower()
+    
+    behavioral_count = sum(1 for word in behavioral_words if word in answer_lower)
+    length_factor = min(len(answer_text) // 30, 3)  # Length bonus
+    
+    score = max(2, min(5, 2 + behavioral_count + length_factor))
+    return score
+
+def analyze_behavioral_tone(answer_text, response_time):
+    """Analyze behavioral patterns in answers"""
+    text_lower = answer_text.lower()
+    
+    # Decision-making indicators
+    decision_words = ['décide', 'choisis', 'planifie', 'organise', 'stratégie', 'méthode']
+    if any(word in text_lower for word in decision_words):
+        return 'decisive'
+    
+    # Collaborative indicators
+    collaborative_words = ['équipe', 'ensemble', 'coopère', 'discute', 'collabore', 'partage']
+    if any(word in text_lower for word in collaborative_words):
+        return 'collaborative'
+    
+    # Analytical indicators
+    analytical_words = ['analyse', 'évalue', 'examine', 'compare', 'considère', 'réfléchis']
+    if any(word in text_lower for word in analytical_words):
+        return 'analytical'
+    
+    # Innovation indicators
+    innovation_words = ['innove', 'crée', 'développe', 'imagine', 'nouveau', 'différent']
+    if any(word in text_lower for word in innovation_words):
+        return 'innovative'
+    
+    # Response time patterns
+    if response_time < 15:
+        return 'quick_decision'
+    elif response_time > 45:
+        return 'thoughtful'
+    
+    return 'balanced'
+
+def analyze_response_quality(answer_text, response_time):
+    """Analyze response quality based on behavioral depth"""
+    answer_length = len(answer_text)
+    
+    # High quality: detailed behavioral descriptions
+    if answer_length > 120 and response_time > 20:
+        return 'high_quality'
+    # Medium quality: good behavioral content
+    elif answer_length > 60 and response_time > 10:
+        return 'medium_quality'
+    # Basic quality: minimal but present
+    elif answer_length > 20:
+        return 'basic_quality'
+    else:
+        return 'low_quality'
+
+def get_next_step(user_data):
+    """Determine the next step in the assessment process"""
+    current_assessment = user_data['current_assessment']
+    current_trait = user_data.get('current_trait')
+    current_question = user_data['current_question_number']
+    
+    # Default return value
+    result = {'completed': False}
+    
+    try:
+        if current_assessment == 'big_five':
+            if current_question >= 3:  # 3 questions per trait
+                # Move to next trait
+                progress = user_data['assessment_progress']['big_five']
+                progress['completed_traits'].append(current_trait)
+                progress['current_trait_index'] += 1
+                
+                if progress['current_trait_index'] < len(ASSESSMENTS['big_five']['traits']):
+                    # Next Big Five trait
+                    next_trait = ASSESSMENTS['big_five']['traits'][progress['current_trait_index']]
+                    result.update({
+                        'current_assessment': 'big_five',
+                        'current_trait': next_trait,
+                        'current_question_number': 1
+                    })
+                else:
+                    # Move to DISC
+                    result.update({
+                        'current_assessment': 'disc',
+                        'current_trait': ASSESSMENTS['disc']['traits'][0],
+                        'current_question_number': 1
+                    })
+            else:
+                # Next question for same trait
+                result.update({
+                    'current_question_number': current_question + 1
+                })
+        
+        elif current_assessment == 'disc':
+            if current_question >= 3:  # 3 questions per style
+                progress = user_data['assessment_progress']['disc']
+                progress['completed_traits'].append(current_trait)
+                progress['current_trait_index'] += 1
+                
+                if progress['current_trait_index'] < len(ASSESSMENTS['disc']['traits']):
+                    # Next DISC style
+                    next_trait = ASSESSMENTS['disc']['traits'][progress['current_trait_index']]
+                    result.update({
+                        'current_assessment': 'disc',
+                        'current_trait': next_trait,
+                        'current_question_number': 1
+                    })
+                else:
+                    # Move to Well-being
+                    result.update({
+                        'current_assessment': 'bien_etre',
+                        'current_trait': 'bien_etre',
+                        'current_question_number': 1
+                    })
+            else:
+                result.update({
+                    'current_question_number': current_question + 1
+                })
+        
+        elif current_assessment == 'bien_etre':
+            if current_question >= 3:
+                # Move to Resilience
+                result.update({
+                    'current_assessment': 'resilience_ie',
+                    'current_trait': 'resilience_ie',
+                    'current_question_number': 1
+                })
+            else:
+                result.update({
+                    'current_question_number': current_question + 1
+                })
+        
+        elif current_assessment == 'resilience_ie':
+            if current_question >= 3:
+                # All assessments completed
+                result.update({'completed': True})
+            else:
+                result.update({
+                    'current_question_number': current_question + 1
+                })
+        
         else:
-            # Move to DISC
-            return DISC_STYLES[0], "disc"
+            # Unknown assessment, mark as completed
+            result.update({'completed': True})
     
-    elif current_assessment == "disc":
-        current_index = DISC_STYLES.index(current_trait)
-        if current_index < len(DISC_STYLES) - 1:
-            return DISC_STYLES[current_index + 1], "disc"
-        else:
-            # Move to well-being (single trait)
-            return "bien_etre", "bien_etre"
+    except Exception as e:
+        # If anything goes wrong, just mark as completed
+        result.update({'completed': True})
     
-    elif current_assessment == "bien_etre":
-        # Move to resilience (single trait)
-        return "resilience_ie", "resilience_ie"
-    
-    # Assessment completed
-    return None, None
+    return result
 
-def calculate_progress(session):
-    """Calculate overall progress percentage"""
-    total_traits = len(TRAITS_BIG5) + len(DISC_STYLES) + 2  # +2 for bien_etre and resilience_ie
-    
-    completed_traits = 0
-    
-    # Count completed Big Five traits
-    if session.current_assessment == "big_five":
-        completed_traits = TRAITS_BIG5.index(session.current_trait)
-    elif session.current_assessment == "disc":
-        completed_traits = len(TRAITS_BIG5) + DISC_STYLES.index(session.current_trait)
-    elif session.current_assessment == "bien_etre":
-        completed_traits = len(TRAITS_BIG5) + len(DISC_STYLES)
-    elif session.current_assessment == "resilience_ie":
-        completed_traits = len(TRAITS_BIG5) + len(DISC_STYLES) + 1
-    
-    return int((completed_traits / total_traits) * 100)
+def calculate_total_questions():
+    """Calculate total number of questions across all assessments"""
+    total = 0
+    total += len(ASSESSMENTS['big_five']['traits']) * 3  # 5 traits × 3 questions
+    total += len(ASSESSMENTS['disc']['traits']) * 3      # 4 styles × 3 questions  
+    total += 3  # bien_etre
+    total += 3  # resilience_ie
+    return total  # Total: 23 questions
 
-def generate_final_results(session):
-    """Generate final assessment results for all modules"""
-    
-    # Process Big Five results
-    for trait in TRAITS_BIG5:
-        answers = Answer.objects.filter(
-            question__session=session,
-            question__trait=trait,
-            question__assessment_type="big_five"
-        )
-        
-        total_score = sum(answer.score for answer in answers)
-        level = get_level_from_score(total_score, "big_five")
-        
-        # Generate detailed analysis
-        answer_texts = [answer.text for answer in answers]
-        analysis = generate_detailed_analysis(
-            trait, answer_texts, total_score, session.language, "big_five"
-        )
-        
-        AssessmentResult.objects.create(
-            session=session,
-            assessment_type="big_five",
-            trait=trait,
-            total_score=total_score,
-            level=level,
-            analysis=analysis
-        )
-    
-    # Process DISC results
-    disc_scores = {}
-    for style in DISC_STYLES:
-        answers = Answer.objects.filter(
-            question__session=session,
-            question__trait=style,
-            question__assessment_type="disc"
-        )
-        
-        total_score = sum(answer.score for answer in answers)
-        disc_scores[style] = total_score
-        
-        answer_texts = [answer.text for answer in answers]
-        analysis = generate_detailed_analysis(
-            style, answer_texts, total_score, session.language, "disc"
-        )
-        
-        AssessmentResult.objects.create(
-            session=session,
-            assessment_type="disc",
-            trait=style,
-            total_score=total_score,
-            level="dominant" if total_score == max(disc_scores.values()) else "secondary",
-            analysis=analysis
-        )
-    
-    # Process Well-being results
-    wellbeing_answers = Answer.objects.filter(
-        question__session=session,
-        question__assessment_type="bien_etre"
-    )
-    
-    wellbeing_total = sum(answer.score for answer in wellbeing_answers)
-    wellbeing_level = get_level_from_score(wellbeing_total, "bien_etre")
-    
-    wellbeing_texts = [answer.text for answer in wellbeing_answers]
-    wellbeing_analysis = generate_detailed_analysis(
-        "bien_etre", wellbeing_texts, wellbeing_total, session.language, "bien_etre"
-    )
-    
-    AssessmentResult.objects.create(
-        session=session,
-        assessment_type="bien_etre",
-        trait="bien_etre",
-        total_score=wellbeing_total,
-        level=wellbeing_level,
-        analysis=wellbeing_analysis
-    )
-    
-    # Process Resilience results
-    resilience_answers = Answer.objects.filter(
-        question__session=session,
-        question__assessment_type="resilience_ie"
-    )
-    
-    resilience_total = sum(answer.score for answer in resilience_answers)
-    resilience_level = get_level_from_score(resilience_total, "resilience_ie")
-    
-    resilience_texts = [answer.text for answer in resilience_answers]
-    resilience_analysis = generate_detailed_analysis(
-        "resilience_ie", resilience_texts, resilience_total, session.language, "resilience_ie"
-    )
-    
-    AssessmentResult.objects.create(
-        session=session,
-        assessment_type="resilience_ie",
-        trait="resilience_ie",
-        total_score=resilience_total,
-        level=resilience_level,
-        analysis=resilience_analysis
-    )
+def get_assessment_name(assessment_type, language):
+    """Get localized assessment name"""
+    names = {
+        'big_five': {
+            'fr': 'Big Five',
+            'en': 'Big Five', 
+            'ar': 'العوامل الخمسة'
+        },
+        'disc': {
+            'fr': 'DISC',
+            'en': 'DISC',
+            'ar': 'DISC'
+        },
+        'bien_etre': {
+            'fr': 'Bien-être',
+            'en': 'Well-being',
+            'ar': 'الرفاهة'
+        },
+        'resilience_ie': {
+            'fr': 'Résilience & IE',
+            'en': 'Resilience & EI',
+            'ar': 'المرونة والذكاء العاطفي'
+        }
+    }
+    return names.get(assessment_type, {}).get(language, assessment_type)
 
-def report(request, session_id):
-    session = get_object_or_404(UserSession, id=session_id)
+def report(request):
+    if 'user_data' not in request.session or not request.session['user_data'].get('is_completed'):
+        return redirect('choose_language')
     
-    if not session.is_completed:
-        return redirect('quiz', session_id=session.id)
+    user_data = request.session['user_data']
+    language = user_data['language']
     
-    # Get all results
-    results = AssessmentResult.objects.filter(session=session).order_by('assessment_type', 'trait')
+    # Generate comprehensive results
+    results = generate_results(user_data)
     
-    # Organize results by assessment type
-    big_five_results = results.filter(assessment_type="big_five")
-    disc_results = results.filter(assessment_type="disc")
-    wellbeing_result = results.filter(assessment_type="bien_etre").first()
-    resilience_result = results.filter(assessment_type="resilience_ie").first()
-    
-    # Prepare scores for coaching recommendation
-    all_scores = {}
-    
-    # Big Five scores
-    all_scores["big_five"] = {}
-    for result in big_five_results:
-        all_scores["big_five"][result.trait] = {
-            'total_score': result.total_score,
-            'level': result.level
+    # Generate coaching recommendations
+    try:
+        coaching_recommendation = should_recommend_coaching(results, language)
+    except:
+        coaching_recommendation = {
+            'should_recommend': False,
+            'message': 'Analyse terminée avec succès.',
+            'priority': 'normal'
         }
-    
-    # Other assessments
-    if wellbeing_result:
-        all_scores["bien_etre"] = {
-            'total_score': wellbeing_result.total_score,
-            'level': wellbeing_result.level
-        }
-    
-    if resilience_result:
-        all_scores["resilience_ie"] = {
-            'total_score': resilience_result.total_score,
-            'level': resilience_result.level
-        }
-    
-    # Get coaching recommendation
-    coaching_recommendation = should_recommend_coaching(all_scores, session.language)
     
     context = {
-        'session': session,
-        'big_five_results': big_five_results,
-        'disc_results': disc_results,
-        'wellbeing_result': wellbeing_result,
-        'resilience_result': resilience_result,
+        'session': {
+            'language': language,
+            'is_completed': True,
+        },
+        'results': results,
         'coaching_recommendation': coaching_recommendation,
-        'traits_config': TRAITS_CONFIG
+        'psychological_insights': generate_insights(user_data, language),
+        'assessment_summary': generate_summary(user_data, language)
     }
     
     return render(request, 'report.html', context)
+
+def generate_results(user_data):
+    """Generate results for all assessments"""
+    results = {}
+    responses = user_data['responses']
+    
+    # Big Five results
+    big_five_results = {}
+    for trait in ASSESSMENTS['big_five']['traits']:
+        trait_responses = [r for r in responses if r['trait'] == trait and r['assessment'] == 'big_five']
+        if trait_responses:
+            scores = [r['score'] for r in trait_responses]
+            avg_score = sum(scores) / len(scores)
+            total_score = avg_score * 5  # Scale to 25
+            
+            big_five_results[trait] = {
+                'score': round(total_score, 1),
+                'level': get_level_from_score(total_score, 'big_five'),
+                'responses': trait_responses
+            }
+    
+    results['big_five'] = big_five_results
+    
+    # DISC results
+    disc_results = {}
+    for style in ASSESSMENTS['disc']['traits']:
+        style_responses = [r for r in responses if r['trait'] == style and r['assessment'] == 'disc']
+        if style_responses:
+            scores = [r['score'] for r in style_responses]
+            avg_score = sum(scores) / len(scores)
+            
+            disc_results[style] = {
+                'score': round(avg_score, 1),
+                'preference_strength': 'high' if avg_score >= 4 else 'medium' if avg_score >= 3 else 'low',
+                'responses': style_responses
+            }
+    
+    results['disc'] = disc_results
+    
+    # Well-being results
+    wellbeing_responses = [r for r in responses if r['assessment'] == 'bien_etre']
+    if wellbeing_responses:
+        scores = [r['score'] for r in wellbeing_responses]
+        total_score = sum(scores) * 2  # Scale to 30
+        
+        results['bien_etre'] = {
+            'score': total_score,
+            'level': get_level_from_score(total_score, 'bien_etre'),
+            'responses': wellbeing_responses
+        }
+    
+    # Resilience results
+    resilience_responses = [r for r in responses if r['assessment'] == 'resilience_ie']
+    if resilience_responses:
+        scores = [r['score'] for r in resilience_responses]
+        total_score = sum(scores) * 2.67  # Scale to 40
+        
+        results['resilience_ie'] = {
+            'score': round(total_score, 1),
+            'level': get_level_from_score(total_score, 'resilience_ie'),
+            'responses': resilience_responses
+        }
+    
+    return results
+
+def get_level_from_score(score, assessment_type):
+    """Determine level based on score"""
+    if assessment_type == "big_five":
+        if score <= 11:
+            return "faible"
+        elif score <= 18:
+            return "modéré"
+        else:
+            return "élevé"
+    elif assessment_type == "bien_etre":
+        if score <= 14:
+            return "faible"
+        elif score <= 22:
+            return "modéré"
+        else:
+            return "élevé"
+    elif assessment_type == "resilience_ie":
+        if score <= 19:
+            return "faible"
+        elif score <= 29:
+            return "modéré"
+        else:
+            return "élevé"
+    else:
+        return "modéré"
+
+def generate_insights(user_data, language):
+    """Generate insights from behavioral patterns"""
+    profile = user_data['psychological_profile']
+    
+    insights = {
+        'response_patterns': analyze_patterns(profile, language),
+        'engagement_level': analyze_engagement(profile, language),
+        'consistency': analyze_consistency(profile, language)
+    }
+    
+    return insights
+
+def analyze_patterns(profile, language):
+    """Analyze response time and length patterns"""
+    if not profile['response_times']:
+        return "Données insuffisantes" if language == 'fr' else "Insufficient data" if language == 'en' else "بيانات غير كافية"
+    
+    avg_time = sum(profile['response_times']) / len(profile['response_times'])
+    avg_length = sum(profile['answer_lengths']) / len(profile['answer_lengths'])
+    
+    patterns = {
+        'fr': f"Temps de réponse moyen: {avg_time:.1f}s, Longueur moyenne: {avg_length:.0f} caractères",
+        'en': f"Average response time: {avg_time:.1f}s, Average length: {avg_length:.0f} characters",
+        'ar': f"متوسط وقت الاستجابة: {avg_time:.1f}ث، متوسط الطول: {avg_length:.0f} حرف"
+    }
+    
+    return patterns.get(language, patterns['fr'])
+
+def analyze_engagement(profile, language):
+    """Analyze overall engagement based on multiple factors"""
+    if not profile['answer_lengths']:
+        return "Modéré" if language == 'fr' else "Moderate" if language == 'en' else "متوسط"
+    
+    avg_length = sum(profile['answer_lengths']) / len(profile['answer_lengths'])
+    
+    if avg_length > 100:
+        level = "Élevé" if language == 'fr' else "High" if language == 'en' else "عالي"
+    elif avg_length > 50:
+        level = "Modéré" if language == 'fr' else "Medium" if language == 'en' else "متوسط"
+    else:
+        level = "Faible" if language == 'fr' else "Low" if language == 'en' else "منخفض"
+    
+    return level
+
+def analyze_consistency(profile, language):
+    """Analyze response consistency"""
+    if len(profile['answer_lengths']) < 3:
+        return "Données insuffisantes" if language == 'fr' else "Insufficient data" if language == 'en' else "بيانات غير كافية"
+    
+    lengths = profile['answer_lengths']
+    times = profile['response_times']
+    
+    # Calculate variance
+    length_variance = sum((x - sum(lengths)/len(lengths))**2 for x in lengths) / len(lengths)
+    time_variance = sum((x - sum(times)/len(times))**2 for x in times) / len(times)
+    
+    if length_variance < 500 and time_variance < 10:
+        consistency = "Élevée" if language == 'fr' else "High" if language == 'en' else "عالية"
+    elif length_variance < 1000 and time_variance < 20:
+        consistency = "Modérée" if language == 'fr' else "Medium" if language == 'en' else "متوسطة"
+    else:
+        consistency = "Variable" if language == 'fr' else "Variable" if language == 'en' else "متغيرة"
+    
+    return consistency
+
+def generate_summary(user_data, language):
+    """Generate summary of assessment completion"""
+    total_time = time.time() - user_data['start_time']
+    total_responses = len(user_data['responses'])
+    
+    summary = {
+        'total_time': f"{total_time/60:.1f} minutes",
+        'total_responses': total_responses,
+        'completion_rate': "100%"
+    }
+    
+    return summary
