@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="{{ session.language }}">
 <head>
@@ -24,7 +23,7 @@
             backdrop-filter: blur(20px);
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            max-width: 900px;
+            max-width: 1200px;
             width: 100%;
             margin: 0 auto;
             padding: 2rem;
@@ -102,10 +101,10 @@
             display: inline-block;
         }
 
-        /* Trait Cards */
+        /* Trait Cards - Row Layout */
         .traits-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
             gap: 1.5rem;
             margin-top: 1rem;
         }
@@ -116,6 +115,7 @@
             border-radius: 12px;
             border: 1px solid rgba(102, 126, 234, 0.1);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            min-height: 400px;
         }
 
         .trait-card:hover {
@@ -162,10 +162,145 @@
             transition: width 1s ease;
         }
 
-        .trait-description {
+        /* Detailed Analysis Sections */
+        .analysis-section {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .observations {
+            background: rgba(102, 126, 234, 0.05);
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            border-left: 3px solid #667eea;
+        }
+
+        .observations-text {
             font-size: 0.9rem;
-            color: #6c7293;
+            color: #5a5f7a;
             line-height: 1.5;
+            font-style: italic;
+        }
+
+        .strengths-weaknesses {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .strengths, .weaknesses {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .strengths {
+            border-left: 3px solid #28a745;
+        }
+
+        .weaknesses {
+            border-left: 3px solid #ffc107;
+        }
+
+        .strengths-title, .weaknesses-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .strengths-title {
+            color: #28a745;
+        }
+
+        .weaknesses-title {
+            color: #e67e22;
+        }
+
+        .analysis-text {
+            font-size: 0.8rem;
+            color: #6c7293;
+            line-height: 1.4;
+        }
+
+        /* Beautiful Lists */
+        .points-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .points-list li {
+            font-size: 0.8rem;
+            color: #6c7293;
+            line-height: 1.4;
+            margin-bottom: 0.4rem;
+            padding-left: 1.2rem;
+            position: relative;
+        }
+
+        .points-list li:before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .advice-section {
+            background: rgba(240, 147, 251, 0.05);
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            border-left: 3px solid #f093fb;
+        }
+
+        .advice-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #8e44ad;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .advice-text {
+            font-size: 0.8rem;
+            color: #6c7293;
+            line-height: 1.4;
+        }
+
+        .coaching-alert {
+            background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(255, 193, 7, 0.1));
+            border: 1px solid rgba(220, 53, 69, 0.2);
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-top: 0.75rem;
+            border-left: 3px solid #dc3545;
+        }
+
+        .coaching-alert-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #dc3545;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .coaching-alert-text {
+            font-size: 0.8rem;
+            color: #721c24;
+            line-height: 1.4;
         }
 
         /* Summary Section */
@@ -237,12 +372,6 @@
             padding: 3rem 2rem;
         }
 
-        .empty-icon {
-            font-size: 4rem;
-            color: #e1e8ff;
-            margin-bottom: 1rem;
-        }
-
         .empty-title {
             font-size: 1.5rem;
             font-weight: 600;
@@ -257,6 +386,12 @@
         }
 
         /* Responsive Design */
+        @media (max-width: 1024px) {
+            .traits-grid {
+                grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            }
+        }
+
         @media (max-width: 768px) {
             .report-container {
                 padding: 1.5rem;
@@ -271,6 +406,11 @@
             .traits-grid {
                 grid-template-columns: 1fr;
                 gap: 1rem;
+            }
+
+            .strengths-weaknesses {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
             }
 
             .retake-button {
@@ -367,12 +507,78 @@
                             {% endif %}
                         </div>
                         <div class="trait-score">
-                            <span class="score-number">{{ data.score }}/25</span>
+                            <span class="score-number">{{ data.score }}/10</span>
                             <div class="score-bar">
-                                <div class="score-fill" data-score="{{ data.score }}" data-max="25" style="width: 0%"></div>
+                                <div class="score-fill" data-score="{{ data.score }}" data-max="10" style="width: 0%"></div>
                             </div>
                         </div>
-                        <div class="trait-description">{{ data.description|default:"" }}</div>
+
+                        <!-- Detailed Analysis -->
+                        {% if data.detailed_analysis %}
+                        <div class="analysis-section">
+                            <!-- Observations -->
+                            {% if data.detailed_analysis.observations %}
+                            <div class="observations">
+                                <div class="observations-text">{{ data.detailed_analysis.observations }}</div>
+                            </div>
+                            {% endif %}
+
+                            <!-- Strengths and Weaknesses -->
+                            <div class="strengths-weaknesses">
+                                {% if data.detailed_analysis.points_forts %}
+                                <div class="strengths">
+                                    <div class="strengths-title">✅ 
+                                        {% if session.language == 'fr' %}Points Forts
+                                        {% elif session.language == 'en' %}Strengths
+                                        {% else %}نقاط القوة{% endif %}
+                                    </div>
+                                    <div class="analysis-text" data-type="list">{{ data.detailed_analysis.points_forts }}</div>
+                                </div>
+                                {% endif %}
+
+                                {% if data.detailed_analysis.points_faibles %}
+                                <div class="weaknesses">
+                                    <div class="weaknesses-title">⚠️ 
+                                        {% if session.language == 'fr' %}Points à Améliorer
+                                        {% elif session.language == 'en' %}Areas to Improve
+                                        {% else %}نقاط للتحسين{% endif %}
+                                    </div>
+                                    <div class="analysis-text" data-type="list">{{ data.detailed_analysis.points_faibles }}</div>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            {% if data.detailed_analysis.conseils %}
+                            <div class="advice-section">
+                                <div class="advice-title">💡 
+                                    {% if session.language == 'fr' %}Conseils Pratiques
+                                    {% elif session.language == 'en' %}Practical Advice
+                                    {% else %}نصائح عملية{% endif %}
+                                </div>
+                                <div class="advice-text">{{ data.detailed_analysis.conseils }}</div>
+                            </div>
+                            {% endif %}
+
+                            {% if data.detailed_analysis.coaching_recommande %}
+                            <div class="coaching-alert">
+                                <div class="coaching-alert-title">🎯 
+                                    {% if session.language == 'fr' %}Coaching Recommandé
+                                    {% elif session.language == 'en' %}Coaching Recommended
+                                    {% else %}التدريب موصى به{% endif %}
+                                </div>
+                                <div class="coaching-alert-text">
+                                    {% if session.language == 'fr' %}
+                                        Nous recommandons de discuter ce point avec un coach NextMind pour développer vos compétences.
+                                    {% elif session.language == 'en' %}
+                                        We recommend discussing this point with a NextMind coach to develop your skills.
+                                    {% else %}
+                                        نوصي بمناقشة هذه النقطة مع مدرب NextMind لتطوير مهاراتك.
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
                     </div>
                     {% endfor %}
                 </div>
@@ -418,12 +624,53 @@
                             {% endif %}
                         </div>
                         <div class="trait-score">
-                            <span class="score-number">{{ data.score }}/25</span>
+                            <span class="score-number">{{ data.score }}/10</span>
                             <div class="score-bar">
-                                <div class="score-fill" data-score="{{ data.score }}" data-max="25" style="width: 0%"></div>
+                                <div class="score-fill" data-score="{{ data.score }}" data-max="10" style="width: 0%"></div>
                             </div>
                         </div>
-                        <div class="trait-description">{{ data.description|default:"" }}</div>
+
+                        {% if data.detailed_analysis %}
+                        <div class="analysis-section">
+                            {% if data.detailed_analysis.observations %}
+                            <div class="observations">
+                                <div class="observations-text">{{ data.detailed_analysis.observations }}</div>
+                            </div>
+                            {% endif %}
+
+                            <div class="strengths-weaknesses">
+                                {% if data.detailed_analysis.points_forts %}
+                                <div class="strengths">
+                                    <div class="strengths-title">✅ Points Forts</div>
+                                    <div class="analysis-text" data-type="list">{{ data.detailed_analysis.points_forts }}</div>
+                                </div>
+                                {% endif %}
+
+                                {% if data.detailed_analysis.points_faibles %}
+                                <div class="weaknesses">
+                                    <div class="weaknesses-title">⚠️ Points à Améliorer</div>
+                                    <div class="analysis-text" data-type="list">{{ data.detailed_analysis.points_faibles }}</div>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            {% if data.detailed_analysis.conseils %}
+                            <div class="advice-section">
+                                <div class="advice-title">💡 Conseils Pratiques</div>
+                                <div class="advice-text">{{ data.detailed_analysis.conseils }}</div>
+                            </div>
+                            {% endif %}
+
+                            {% if data.detailed_analysis.coaching_recommande %}
+                            <div class="coaching-alert">
+                                <div class="coaching-alert-title">🎯 Coaching Recommandé</div>
+                                <div class="coaching-alert-text">
+                                    Nous recommandons de discuter ce point avec un coach NextMind لتطوير vos compétences.
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
                     </div>
                     {% endfor %}
                 </div>
@@ -443,14 +690,79 @@
                         الرفاهة في العمل
                     {% endif %}
                 </h2>
+                <div class="traits-grid">
                 <div class="trait-card">
                     <div class="trait-score">
-                        <span class="score-number">{{ results.bien_etre.score }}/30</span>
+                        <span class="score-number">{{ results.bien_etre.score }}/10</span>
                         <div class="score-bar">
-                            <div class="score-fill" data-score="{{ results.bien_etre.score }}" data-max="30" style="width: 0%"></div>
+                            <div class="score-fill" data-score="{{ results.bien_etre.score }}" data-max="10" style="width: 0%"></div>
                         </div>
                     </div>
-                    <div class="trait-description">{{ results.bien_etre.description|default:"" }}</div>
+
+                    {% if results.bien_etre.detailed_analysis %}
+                    <div class="analysis-section">
+                        {% if results.bien_etre.detailed_analysis.observations %}
+                        <div class="observations">
+                            <div class="observations-text">{{ results.bien_etre.detailed_analysis.observations }}</div>
+                        </div>
+                        {% endif %}
+
+                        <div class="strengths-weaknesses">
+                            {% if results.bien_etre.detailed_analysis.points_forts %}
+                            <div class="strengths">
+                                <div class="strengths-title">✅ 
+                                    {% if session.language == 'fr' %}Points Forts
+                                    {% elif session.language == 'en' %}Strengths
+                                    {% else %}نقاط القوة{% endif %}
+                                </div>
+                                <div class="analysis-text" data-type="list">{{ results.bien_etre.detailed_analysis.points_forts }}</div>
+                            </div>
+                            {% endif %}
+
+                            {% if results.bien_etre.detailed_analysis.points_faibles %}
+                            <div class="weaknesses">
+                                <div class="weaknesses-title">⚠️ 
+                                    {% if session.language == 'fr' %}Points à Améliorer
+                                    {% elif session.language == 'en' %}Areas to Improve
+                                    {% else %}نقاط للتحسين{% endif %}
+                                </div>
+                                <div class="analysis-text" data-type="list">{{ results.bien_etre.detailed_analysis.points_faibles }}</div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        {% if results.bien_etre.detailed_analysis.conseils %}
+                        <div class="advice-section">
+                            <div class="advice-title">💡 
+                                {% if session.language == 'fr' %}Conseils Pratiques
+                                {% elif session.language == 'en' %}Practical Advice
+                                {% else %}نصائح عملية{% endif %}
+                            </div>
+                            <div class="advice-text">{{ results.bien_etre.detailed_analysis.conseils }}</div>
+                        </div>
+                        {% endif %}
+
+                        {% if results.bien_etre.detailed_analysis.coaching_recommande %}
+                        <div class="coaching-alert">
+                            <div class="coaching-alert-title">🎯 
+                                {% if session.language == 'fr' %}Coaching Recommandé
+                                {% elif session.language == 'en' %}Coaching Recommended
+                                {% else %}التدريب موصى به{% endif %}
+                            </div>
+                            <div class="coaching-alert-text">
+                                {% if session.language == 'fr' %}
+                                    Nous recommandons de discuter ce point avec un coach NextMind pour développer vos compétences.
+                                {% elif session.language == 'en' %}
+                                    We recommend discussing this point with a NextMind coach to develop your skills.
+                                {% else %}
+                                    نوصي بمناقشة هذه النقطة مع مدرب NextMind لتطوير مهاراتك.
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
                 </div>
             </div>
             {% endif %}
@@ -468,14 +780,79 @@
                         المرونة والذكاء العاطفي
                     {% endif %}
                 </h2>
+                <div class="traits-grid">
                 <div class="trait-card">
                     <div class="trait-score">
-                        <span class="score-number">{{ results.resilience_ie.score }}/40</span>
+                        <span class="score-number">{{ results.resilience_ie.score }}/10</span>
                         <div class="score-bar">
-                            <div class="score-fill" data-score="{{ results.resilience_ie.score }}" data-max="40" style="width: 0%"></div>
+                            <div class="score-fill" data-score="{{ results.resilience_ie.score }}" data-max="10" style="width: 0%"></div>
                         </div>
                     </div>
-                    <div class="trait-description">{{ results.resilience_ie.description|default:"" }}</div>
+
+                    {% if results.resilience_ie.detailed_analysis %}
+                    <div class="analysis-section">
+                        {% if results.resilience_ie.detailed_analysis.observations %}
+                        <div class="observations">
+                            <div class="observations-text">{{ results.resilience_ie.detailed_analysis.observations }}</div>
+                        </div>
+                        {% endif %}
+
+                        <div class="strengths-weaknesses">
+                            {% if results.resilience_ie.detailed_analysis.points_forts %}
+                            <div class="strengths">
+                                <div class="strengths-title">✅ 
+                                    {% if session.language == 'fr' %}Points Forts
+                                    {% elif session.language == 'en' %}Strengths
+                                    {% else %}نقاط القوة{% endif %}
+                                </div>
+                                <div class="analysis-text" data-type="list">{{ results.resilience_ie.detailed_analysis.points_forts }}</div>
+                            </div>
+                            {% endif %}
+
+                            {% if results.resilience_ie.detailed_analysis.points_faibles %}
+                            <div class="weaknesses">
+                                <div class="weaknesses-title">⚠️ 
+                                    {% if session.language == 'fr' %}Points à Améliorer
+                                    {% elif session.language == 'en' %}Areas to Improve
+                                    {% else %}نقاط للتحسين{% endif %}
+                                </div>
+                                <div class="analysis-text" data-type="list">{{ results.resilience_ie.detailed_analysis.points_faibles }}</div>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        {% if results.resilience_ie.detailed_analysis.conseils %}
+                        <div class="advice-section">
+                            <div class="advice-title">💡 
+                                {% if session.language == 'fr' %}Conseils Pratiques
+                                {% elif session.language == 'en' %}Practical Advice
+                                {% else %}نصائح عملية{% endif %}
+                            </div>
+                            <div class="advice-text">{{ results.resilience_ie.detailed_analysis.conseils }}</div>
+                        </div>
+                        {% endif %}
+
+                        {% if results.resilience_ie.detailed_analysis.coaching_recommande %}
+                        <div class="coaching-alert">
+                            <div class="coaching-alert-title">🎯 
+                                {% if session.language == 'fr' %}Coaching Recommandé
+                                {% elif session.language == 'en' %}Coaching Recommended
+                                {% else %}التدريب موصى به{% endif %}
+                            </div>
+                            <div class="coaching-alert-text">
+                                {% if session.language == 'fr' %}
+                                    Nous recommandons de discuter ce point avec un coach NextMind pour développer vos compétences.
+                                {% elif session.language == 'en' %}
+                                    We recommend discussing this point with a NextMind coach to develop your skills.
+                                {% else %}
+                                    نوصي بمناقشة هذه النقطة مع مدرب NextMind لتطوير مهاراتك.
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
                 </div>
             </div>
             {% endif %}
@@ -505,7 +882,6 @@
         {% else %}
             <!-- Empty State -->
             <div class="empty-state">
-               
                 <h2 class="empty-title">
                     {% if session.language == 'fr' %}
                         Aucun résultat disponible
@@ -551,8 +927,48 @@
     </div>
 
     <script>
+        // Function to convert list strings to beautiful bullet points
+        function formatListText() {
+            const listElements = document.querySelectorAll('[data-type="list"]');
+            
+            listElements.forEach(element => {
+                let text = element.textContent;
+                
+                // Check if it's a Python list format ['item1', 'item2', ...]
+                if (text.includes('[') && text.includes(']') && text.includes("'")) {
+                    try {
+                        // Clean the text and convert to proper JSON format
+                        let cleanText = text
+                            .replace(/'/g, '"')  // Replace single quotes with double quotes
+                            .replace(/\["/g, '["')  // Ensure proper JSON format
+                            .replace(/"\]/g, '"]');
+                        
+                        // Parse as JSON array
+                        const items = JSON.parse(cleanText);
+                        
+                        // Create a beautiful list
+                        const ul = document.createElement('ul');
+                        ul.className = 'points-list';
+                        
+                        items.forEach(item => {
+                            const li = document.createElement('li');
+                            li.textContent = item;
+                            ul.appendChild(li);
+                        });
+                        
+                        // Replace the original text with the list
+                        element.innerHTML = '';
+                        element.appendChild(ul);
+                    } catch (e) {
+                        // If parsing fails, just display as regular text
+                        console.log('Could not parse list:', text);
+                    }
+                }
+            });
+        }
+
         // Calculate and animate score bars on page load
-        window.addEventListener('load', function() {
+        function animateScoreBars() {
             const scoreFills = document.querySelectorAll('.score-fill');
             
             scoreFills.forEach((fill, index) => {
@@ -564,6 +980,12 @@
                     fill.style.width = percentage + '%';
                 }, index * 200);
             });
+        }
+
+        // Run everything when page loads
+        window.addEventListener('load', function() {
+            formatListText();
+            animateScoreBars();
         });
     </script>
 </body>
