@@ -1,21 +1,23 @@
-# NextMind Questionnaire - Minimal Requirements
+
 # Install with: pip install -r requirements.txt
 
-# Core Django Framework
+
 Django==5.2
 
-# AI API Client (for Groq/OpenAI)
+
 openai==1.51.2
 
-# HTTP Client (required by openai)
+
 httpx==0.27.2
 
 # Environment Variables
 python-dotenv==1.0.1
 
-# Testing (since you have pytest configured)
+
 pytest==8.4.1
 pytest-django==4.11.1
 
-# CORS Headers (for frontend if needed)
+
 django-cors-headers==4.3.1
+openai
+

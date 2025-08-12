@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NextMind Assessment - {{ current_trait|title }}</title>
+    <title>NextMind Assessment - {{ current_trait_display }}</title>
     <style>
         * {
             margin: 0;
@@ -362,14 +362,14 @@
                     {% if current_assessment == 'big_five' %}Big Five
                     {% elif current_assessment == 'disc' %}DISC
                     {% elif current_assessment == 'bien_etre' %}Bien-être
-                    {% elif current_assessment == 'resilience_ie' %}Résilience & Intelligence Émotionnelle
+                    {% elif current_assessment == 'resilience_ie' %}Résilience & IE
                     {% else %}{{ current_assessment|title }}
                     {% endif %}
                 {% elif session.language == 'en' %}
                     {% if current_assessment == 'big_five' %}Big Five
                     {% elif current_assessment == 'disc' %}DISC
                     {% elif current_assessment == 'bien_etre' %}Well-being
-                    {% elif current_assessment == 'resilience_ie' %}Resilience & Emotional Intelligence
+                    {% elif current_assessment == 'resilience_ie' %}Resilience & EI
                     {% else %}{{ current_assessment|title }}
                     {% endif %}
                 {% else %}
@@ -437,7 +437,7 @@
                     name="answer" 
                     id="answer-input"
                     class="answer-input" 
-                    placeholder="{% if session.language == 'fr' %}Partagez vos pensées et expériences ici...{% elif session.language == 'en' %}Share your thoughts and experiences here...{% else %}شاركنا أفكارك وتجاربك هنا...{% endif %}"
+                    placeholder="{{ ui_text.answer_placeholder }}"
                     required
                     maxlength="1000"
                 ></textarea>
@@ -445,11 +445,11 @@
                 <div class="buttons">
                     <button type="submit" class="btn-primary" id="submit-btn">
                         {% if session.language == 'fr' %}
-                            Continuer ✨
+                            {{ ui_text.submit_button }} ✨
                         {% elif session.language == 'en' %}
-                            Continue ✨
+                            {{ ui_text.submit_button }} ✨
                         {% else %}
-                            متابعة ✨
+                            {{ ui_text.submit_button }} ✨
                         {% endif %}
                     </button>
                 </div>
@@ -483,8 +483,11 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         
         const answer = answerInput.value.trim();
-        if (!answer) {
-            showError('{% if session.language == "fr" %}Veuillez saisir une réponse{% elif session.language == "en" %}Please enter an answer{% else %}يرجى إدخال إجابة{% endif %}');
+        
+        // Enhanced client-side validation
+        const validationResult = validateAnswerClient(answer);
+        if (!validationResult.isValid) {
+            showError(validationResult.message);
             return;
         }
 
@@ -529,6 +532,151 @@ document.addEventListener('DOMContentLoaded', function() {
             resetButton();
         });
     });
+
+    // Client-side validation function
+    function validateAnswerClient(answer) {
+        const language = '{{ session.language }}';
+        
+        // Empty check
+        if (!answer || answer.trim().length === 0) {
+            return {
+                isValid: false,
+                message: language === 'fr' ? 'Veuillez saisir une réponse' : 
+                        language === 'en' ? 'Please enter an answer' : 
+                        'يرجى إدخال إجابة'
+            };
+        }
+
+        // Length checks - more lenient
+        if (answer.trim().length < 5) {
+            return {
+                isValid: false,
+                message: language === 'fr' ? 'Votre réponse est trop courte. Décrivez votre approche plus en détail (minimum 5 caractères).' : 
+                        language === 'en' ? 'Your answer is too short. Describe your approach in more detail (minimum 5 characters).' : 
+                        'إجابتك قصيرة جداً. يرجى وصف نهجك بتفصيل أكثر (5 أحرف على الأقل).'
+            };
+        }
+
+        if (answer.length > 1000) {
+            return {
+                isValid: false,
+                message: language === 'fr' ? 'Votre réponse est trop longue. Veuillez la raccourcir (maximum 1000 caractères).' : 
+                        language === 'en' ? 'Your answer is too long. Please shorten it (maximum 1000 characters).' : 
+                        'إجابتك طويلة جداً. يرجى تقصيرها (1000 حرف كحد أقصى).'
+            };
+        }
+
+        // Pattern checks for obvious nonsense
+        const lowerAnswer = answer.toLowerCase().trim();
+        
+        // Check for single characters or very short meaningless text
+        if (/^[a-z]{1,3}$/.test(lowerAnswer) || /^[0-9]+$/.test(lowerAnswer)) {
+            return {
+                isValid: false,
+                message: language === 'fr' ? 'Veuillez fournir une réponse significative qui décrit votre comportement.' : 
+                        language === 'en' ? 'Please provide a meaningful response that describes your behavior.' : 
+                        'يرجى تقديم إجابة ذات معنى تصف سلوكك.'
+            };
+        }
+
+        // Check for repeated characters (e.g., "aaaaa", "11111")
+        if (/^(.)\1{4,}$/.test(lowerAnswer)) {
+            return {
+                isValid: false,
+                message: language === 'fr' ? 'Veuillez éviter les répétitions excessives de caractères.' : 
+                        language === 'en' ? 'Please avoid excessive character repetition.' : 
+                        'يرجى تجنب التكرار المفرط للأحرف.'
+            };
+        }
+
+        // Check for common test words
+        const testWords = ['test', 'testing', 'test123', 'lorem', 'ipsum', 'qwerty', 'asdf'];
+        if (testWords.includes(lowerAnswer)) {
+            return {
+                isValid: false,
+                message: language === 'fr' ? 'Veuillez décrire votre expérience personnelle avec vos propres mots.' : 
+                        language === 'en' ? 'Please describe your personal experience in your own words.' : 
+                        'يرجى وصف تجربتك الشخصية بكلماتك الخاصة.'
+            };
+        }
+
+        // Check for excessive repetition of words - more lenient
+        const words = lowerAnswer.split(/\s+/);
+        if (words.length > 5) { // Only check if more than 5 words
+            const uniqueWords = new Set(words);
+            if (uniqueWords.size / words.length < 0.2) { // Less than 20% unique words (was 40%)
+                return {
+                    isValid: false,
+                    message: language === 'fr' ? 'Votre réponse contient trop de répétitions. Veuillez varier votre vocabulaire.' : 
+                            language === 'en' ? 'Your response contains too much repetition. Please vary your vocabulary.' : 
+                            'إجابتك تحتوي على تكرار مفرط. يرجى تنويع مفرداتك.'
+                };
+            }
+        }
+
+        // Check if user copied the question as answer - more lenient
+        const questionText = document.querySelector('.question-card h3')?.textContent?.toLowerCase() || '';
+        const questionWords = questionText.split(/\s+/).filter(word => word.length > 4); // Only longer words
+        const answerWords = lowerAnswer.split(/\s+/);
+        
+        // Count how many question words appear in the answer
+        let matchCount = 0;
+        questionWords.forEach(qWord => {
+            if (answerWords.some(aWord => aWord === qWord)) { // Exact matches only
+                matchCount++;
+            }
+        });
+        
+        // If more than 70% of question words appear exactly in answer, it's likely copied (was 50%)
+        if (questionWords.length > 0 && (matchCount / questionWords.length) > 0.7) {
+            return {
+                isValid: false,
+                message: language === 'fr' ? 'Il semble que vous ayez copié la question. Veuillez répondre en décrivant votre comportement personnel.' : 
+                        language === 'en' ? 'It appears you copied the question. Please answer by describing your personal behavior.' : 
+                        'يبدو أنك نسخت السؤال. يرجى الإجابة بوصف سلوكك الشخصي.'
+            };
+        }
+
+        // Language mixing check - more lenient
+        if (language === 'fr') {
+            // Check for English words mixed in French answers - higher threshold
+            const englishWords = ['situations', 'you', 'manage', 'situation', 'when', 'how', 'what'];
+            const frenchWords = lowerAnswer.split(/\s+/);
+            const englishCount = frenchWords.filter(word => englishWords.includes(word)).length;
+            if (englishCount > 4) { // Increased from 2 to 4
+                return {
+                    isValid: false,
+                    message: 'Veuillez répondre principalement en français.'
+                };
+            }
+        }
+
+        if (language === 'en') {
+            // Check for French words mixed in English answers - higher threshold
+            const frenchWords = ['gérer', 'situations', 'vous', 'dans', 'une'];
+            const englishWordsList = lowerAnswer.split(/\s+/);
+            const frenchCount = englishWordsList.filter(word => frenchWords.includes(word)).length;
+            if (frenchCount > 4) { // Increased from 2 to 4
+                return {
+                    isValid: false,
+                    message: 'Please answer primarily in English.'
+                };
+            }
+        }
+
+        // Basic relevance check - more lenient, removed strict personal content requirement
+        // Now just check length and basic content
+        if (answer.trim().length < 5) {
+            return {
+                isValid: false,
+                message: language === 'fr' ? 'Veuillez décrire votre approche plus en détail.' : 
+                        language === 'en' ? 'Please describe your approach in more detail.' : 
+                        'يرجى وصف نهجك بتفصيل أكثر.'
+            };
+        }
+
+        return { isValid: true };
+    }
 
     function showError(message) {
         errorDiv.textContent = message;
