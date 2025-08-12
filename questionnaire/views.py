@@ -13,7 +13,8 @@ from .utils import (
     get_trait_intro,
     ASSESSMENT_STRUCTURE,
     generate_detailed_analysis,
-    get_behavioral_questions,
+
+    
     generate_score_explanations,
     generate_enhanced_detailed_analysis,
 )
@@ -904,19 +905,19 @@ def quiz(request):
         except Exception as e:
             logger.error(f"Error generating question attempt {attempt + 1}: {e}")
     
-    # Fallback if all attempts failed
-    if not question_text:
-        question_text = get_behavioral_questions(
-            trait=current_trait,
-            question_number=question_number,
-            previous_answers=[r['text'] for r in previous_responses],
-            previous_score=previous_score,
-            language=user_data['language'],
-            assessment_type=current_assessment
-        )
-        # Track fallback question too
-        if not is_question_already_used(session_key, question_text):
-            track_used_question(session_key, question_text)
+    # # Fallback if all attempts failed
+    # if not question_text:
+    #     question_text = get_behavioral_questions(
+    #         trait=current_trait,
+    #         question_number=question_number,
+    #         previous_answers=[r['text'] for r in previous_responses],
+    #         previous_score=previous_score,
+    #         language=user_data['language'],
+    #         assessment_type=current_assessment
+    #     )
+    #     # Track fallback question too
+    #     if not is_question_already_used(session_key, question_text):
+    #         track_used_question(session_key, question_text)
     
     # Store question start time for response time tracking
     user_data['question_start_time'] = time.time()

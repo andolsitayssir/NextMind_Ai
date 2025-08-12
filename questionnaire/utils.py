@@ -357,369 +357,369 @@ def extract_question_topics(previous_answers, language):
     
     return list(set(topics))
 
-def get_behavioral_questions(trait, question_number, previous_answers, previous_score, language, assessment_type):
-    """Fallback function to generate dynamic behavioral questions based on previous score"""
-    topics_to_avoid = extract_question_topics(previous_answers, language)
+# def get_behavioral_questions(trait, question_number, previous_answers, previous_score, language, assessment_type):
+#     """Fallback function to generate dynamic behavioral questions based on previous score"""
+#     topics_to_avoid = extract_question_topics(previous_answers, language)
     
-    # Define question templates based on score
-    question_templates = {
-        "low_score": {  # For scores 1-2
-            "fr": [
-                "Quels facteurs vous empêchent de {action} dans {context} ?",
-                "Pourquoi trouvez-vous difficile de {action} face à {challenge} ?",
-                "Quelles contraintes limitent votre capacité à {action} dans {context} ?"
-            ],
-            "en": [
-                "What factors prevent you from {action} in {context}?",
-                "Why do you find it difficult to {action} when facing {challenge}?",
-                "What constraints limit your ability to {action} in {context}?"
-            ],
-            "ar": [
-                "ما العوامل التي تمنعك من {action} في {context}؟",
-                "لماذا تجد صعوبة في {action} عند مواجهة {challenge}؟",
-                "ما القيود التي تحد من قدرتك على {action} في {context}؟"
-            ]
-        },
-        "medium_score": {  # For score 3
-            "fr": [
-                "Dans quelles conditions {action} devient plus facile pour vous ?",
-                "Comment votre approche pour {action} varie-t-elle selon {context} ?",
-                "Quels facteurs influencent votre capacité à {action} efficacement ?"
-            ],
-            "en": [
-                "Under what conditions does {action} become easier for you?",
-                "How does your approach to {action} vary based on {context}?",
-                "What factors influence your ability to {action} effectively?"
-            ],
-            "ar": [
-                "في أي ظروف يصبح {action} أسهل بالنسبة لك؟",
-                "كيف يتغير نهجك في {action} بناءً على {context}؟",
-                "ما العوامل التي تؤثر على قدرتك على {action} بفعالية؟"
-            ]
-        },
-        "high_score": {  # For scores 4-5
-            "fr": [
-                "Quelles stratégies utilisez-vous pour réussir à {action} dans {context} ?",
-                "Comment optimisez-vous votre capacité à {action} face à {challenge} ?",
-                "Quels sont vos points forts pour {action} dans {context} ?"
-            ],
-            "en": [
-                "What strategies do you use to succeed in {action} in {context}?",
-                "How do you optimize your ability to {action} when facing {challenge}?",
-                "What are your strengths in {action} within {context}?"
-            ],
-            "ar": [
-                "ما الاستراتيجيات التي تستخدمها للنجاح في {action} في {context}؟",
-                "كيف تعمل على تحسين قدرتك على {action} عند مواجهة {challenge}؟",
-                "ما هي نقاط قوتك في {action} ضمن {context}؟"
-            ]
-        },
-        "default": {  # For first question or no previous score
-            "fr": [
-                "Décrivez votre méthode pour {action} dans un contexte professionnel.",
-                "Quelle approche adoptez-vous pour {action} face à {context} ?",
-                "Préférez-vous {option1} ou {option2} dans vos {context} ?",
-                "Dans quelles situations {action} de manière proactive ?",
-                "Comment gérez-vous {challenge} dans un environnement {context} ?"
-            ],
-            "en": [
-                "Describe your method for {action} in a professional context.",
-                "What approach do you take to {action} when facing {context}?",
-                "Do you prefer {option1} or {option2} in your {context}?",
-                "In what situations do you {action} proactively?",
-                "How do you manage {challenge} in a {context} environment?"
-            ],
-            "ar": [
-                "صف طريقتك في {action} في سياق مهني.",
-                "ما المنهج الذي تتبعه لـ {action} عند مواجهة {context}؟",
-                "هل تفضل {option1} أم {option2} في {context}؟",
-                "في أي مواقف تقوم بـ {action} بشكل استباقي؟",
-                "كيف تدير {challenge} في بيئة {context}؟"
-            ]
-        }
-    }
+#     # Define question templates based on score
+#     question_templates = {
+#         "low_score": {  # For scores 1-2
+#             "fr": [
+#                 "Quels facteurs vous empêchent de {action} dans {context} ?",
+#                 "Pourquoi trouvez-vous difficile de {action} face à {challenge} ?",
+#                 "Quelles contraintes limitent votre capacité à {action} dans {context} ?"
+#             ],
+#             "en": [
+#                 "What factors prevent you from {action} in {context}?",
+#                 "Why do you find it difficult to {action} when facing {challenge}?",
+#                 "What constraints limit your ability to {action} in {context}?"
+#             ],
+#             "ar": [
+#                 "ما العوامل التي تمنعك من {action} في {context}؟",
+#                 "لماذا تجد صعوبة في {action} عند مواجهة {challenge}؟",
+#                 "ما القيود التي تحد من قدرتك على {action} في {context}؟"
+#             ]
+#         },
+#         "medium_score": {  # For score 3
+#             "fr": [
+#                 "Dans quelles conditions {action} devient plus facile pour vous ?",
+#                 "Comment votre approche pour {action} varie-t-elle selon {context} ?",
+#                 "Quels facteurs influencent votre capacité à {action} efficacement ?"
+#             ],
+#             "en": [
+#                 "Under what conditions does {action} become easier for you?",
+#                 "How does your approach to {action} vary based on {context}?",
+#                 "What factors influence your ability to {action} effectively?"
+#             ],
+#             "ar": [
+#                 "في أي ظروف يصبح {action} أسهل بالنسبة لك؟",
+#                 "كيف يتغير نهجك في {action} بناءً على {context}؟",
+#                 "ما العوامل التي تؤثر على قدرتك على {action} بفعالية؟"
+#             ]
+#         },
+#         "high_score": {  # For scores 4-5
+#             "fr": [
+#                 "Quelles stratégies utilisez-vous pour réussir à {action} dans {context} ?",
+#                 "Comment optimisez-vous votre capacité à {action} face à {challenge} ?",
+#                 "Quels sont vos points forts pour {action} dans {context} ?"
+#             ],
+#             "en": [
+#                 "What strategies do you use to succeed in {action} in {context}?",
+#                 "How do you optimize your ability to {action} when facing {challenge}?",
+#                 "What are your strengths in {action} within {context}?"
+#             ],
+#             "ar": [
+#                 "ما الاستراتيجيات التي تستخدمها للنجاح في {action} في {context}؟",
+#                 "كيف تعمل على تحسين قدرتك على {action} عند مواجهة {challenge}؟",
+#                 "ما هي نقاط قوتك في {action} ضمن {context}؟"
+#             ]
+#         },
+#         "default": { 
+#             "fr": [
+#                 "Décrivez votre méthode pour {action} dans un contexte professionnel.",
+#                 "Quelle approche adoptez-vous pour {action} face à {context} ?",
+#                 "Préférez-vous {option1} ou {option2} dans vos {context} ?",
+                
+#                 "Comment gérez-vous {challenge} dans un environnement {context} ?"
+#             ],
+#             "en": [
+#                 "Describe your method for {action} in a professional context.",
+#                 "What approach do you take to {action} when facing {context}?",
+#                 "Do you prefer {option1} or {option2} in your {context}?",
+                
+#                 "How do you manage {challenge} in a {context} environment?"
+#             ],
+#             "ar": [
+#                 "صف طريقتك في {action} في سياق مهني.",
+#                 "ما المنهج الذي تتبعه لـ {action} عند مواجهة {context}؟",
+#                 "هل تفضل {option1} أم {option2} في {context}؟",
+                
+#                 "كيف تدير {challenge} في بيئة {context}؟"
+#             ]
+#         }
+#     }
 
-    trait_contexts = {
-        "big_five": {
-            "ouverture": {
-                "fr": {
-                    "actions": ["explorer de nouvelles idées dans un projet complexe impliquant plusieurs départements", "résoudre des problèmes créatifs avec des contraintes budgétaires strictes", "innover face à une résistance organisationnelle"],
-                    "contexts": ["un projet de transformation digitale avec des équipes résistantes au changement", "une situation de crise nécessitant des solutions non conventionnelles", "une collaboration avec des partenaires aux cultures très différentes"],
-                    "challenges": ["un changement soudain de direction stratégique imposé par la direction", "des contraintes réglementaires qui limitent les options créatives"],
-                    "options": [("suivre des méthodes éprouvées pour minimiser les risques", "créer des solutions entièrement nouvelles malgré l'incertitude"), ("prendre des risques calculés pour innover", "préserver la stabilité et les processus existants")]
-                },
-                "en": {
-                    "actions": ["explore innovative solutions in a multi-stakeholder project with conflicting priorities", "solve complex problems when established methods have failed repeatedly", "innovate within a traditional organization resistant to change"],
-                    "contexts": ["a digital transformation project involving skeptical senior management and diverse teams", "a crisis situation requiring unconventional approaches with limited resources", "a cross-cultural collaboration with partners who have opposing methodologies"],
-                    "challenges": ["a sudden strategic pivot mandated by leadership with tight deadlines", "regulatory constraints that severely limit creative options and require compliance"],
-                    "options": [("follow proven methodologies to ensure predictable outcomes", "create entirely new solutions despite inherent uncertainty"), ("take calculated risks to drive innovation forward", "preserve organizational stability and existing proven processes")]
-                },
-                "ar": {
-                    "actions": ["استكشاف حلول مبتكرة في مشروع متعدد أصحاب المصلحة مع أولويات متضاربة", "حل مشاكل معقدة عندما فشلت الطرق التقليدية مراراً", "الابتكار داخل منظمة تقليدية مقاومة للتغيير"],
-                    "contexts": ["مشروع تحول رقمي يشمل إدارة عليا متشككة وفرق متنوعة", "حالة أزمة تتطلب مناهج غير تقليدية مع موارد محدودة", "تعاون عبر ثقافي مع شركاء لديهم منهجيات متعارضة"],
-                    "challenges": ["تغيير استراتيجي مفاجئ تفرضه القيادة مع مواعيد نهائية ضيقة", "قيود تنظيمية تحد بشدة من الخيارات الإبداعية وتتطلب الامتثال"],
-                    "options": [("اتباع منهجيات مجربة لضمان نتائج متوقعة", "إنشاء حلول جديدة تماماً رغم عدم اليقين المتأصل"), ("المخاطرة المحسوبة لدفع الابتكار قدماً", "الحفاظ على استقرار المنظمة والعمليات المجربة")]
-                }
-            },
-            "conscienciosité": {
-                "fr": {
-                    "actions": ["organiser un projet complexe avec des équipes dispersées géographiquement", "prioriser des tâches contradictoires sous pression temporelle extrême", "assurer la qualité dans un environnement où les standards changent fréquemment"],
-                    "contexts": ["un lancement de produit critique avec des dépendances multiples et des risques élevés", "une restructuration organisationnelle nécessitant une coordination méticuleuse", "une équipe internationale avec des fuseaux horaires et cultures de travail différents"],
-                    "challenges": ["des priorités conflictuelles imposées par différents directeurs avec des objectifs incompatibles", "des ressources limitées qui obligent à faire des compromis sur la qualité"],
-                    "options": [("planifier exhaustivement chaque détail avant de commencer", "s'adapter continuellement aux changements en cours de route"), ("viser la perfection quitte à dépasser les délais", "optimiser l'efficacité même si cela compromet certains détails")]
-                },
-                "en": {
-                    "actions": ["organize a complex project with geographically dispersed teams across time zones", "prioritize conflicting tasks under extreme time pressure with shifting requirements", "ensure quality standards in an environment where criteria change frequently"],
-                    "contexts": ["a critical product launch with multiple dependencies and high stakes for company reputation", "an organizational restructuring requiring meticulous coordination and change management", "an international team with different time zones and varying work cultures"],
-                    "challenges": ["conflicting priorities imposed by different directors with incompatible objectives and expectations", "severely limited resources forcing difficult compromises on quality standards"],
-                    "options": [("plan every detail exhaustively before beginning any execution", "continuously adapt to changes and emerging requirements during implementation"), ("strive for perfection even if it means exceeding deadlines", "optimize efficiency even if it compromises certain quality details")]
-                },
-                "ar": {
-                    "actions": ["تنظيم مشروع معقد مع فرق موزعة جغرافياً عبر مناطق زمنية مختلفة", "ترتيب أولوية مهام متضاربة تحت ضغط زمني شديد مع متطلبات متغيرة", "ضمان معايير الجودة في بيئة تتغير فيها المعايير بشكل متكرر"],
-                    "contexts": ["إطلاق منتج حاسم مع تبعيات متعددة ومخاطر عالية لسمعة الشركة", "إعادة هيكلة تنظيمية تتطلب تنسيقاً دقيقاً وإدارة التغيير", "فريق دولي مع مناطق زمنية مختلفة وثقافات عمل متنوعة"],
-                    "challenges": ["أولويات متضاربة تفرضها مديرون مختلفون بأهداف وتوقعات غير متوافقة", "موارد محدودة بشدة تجبر على تنازلات صعبة حول معايير الجودة"],
-                    "options": [("التخطيط لكل التفاصيل بشمولية قبل البدء بأي تنفيذ", "التكيف المستمر مع التغييرات والمتطلبات الناشئة أثناء التنفيذ"), ("السعي للكمال حتى لو عنى ذلك تجاوز المواعيد النهائية", "تحسين الكفاءة حتى لو أضر ببعض تفاصيل الجودة")]
-                }
-            },
-            "extraversion": {
-                "fr": {
-                    "actions": ["prendre la parole dans une réunion où règne un conflit ouvert entre départements", "motiver une équipe démoralisée après plusieurs échecs consécutifs", "établir des relations avec des clients difficiles et exigeants"],
-                    "contexts": ["une présentation cruciale devant un comité de direction sceptique et critique", "un groupe de collaborateurs résistants au changement et méfiants", "un événement de networking avec des personnalités influentes mais intimidantes"],
-                    "challenges": ["un conflit interpersonnel ouvert qui divise l'équipe et paralyse les décisions", "un manque d'engagement généralisé suite à des promesses non tenues par la direction"],
-                    "options": [("diriger activement les discussions pour imposer votre vision", "écouter attentivement tous les points de vue avant de proposer une synthèse"), ("convaincre par la force de votre argumentation et votre charisme", "montrer l'exemple par vos actions et laisser les résultats parler")]
-                },
-                "en": {
-                    "actions": ["speak up in a meeting where open conflict exists between departments with entrenched positions", "motivate a demoralized team after several consecutive failures and setbacks", "establish relationships with difficult and demanding clients who have high expectations"],
-                    "contexts": ["a crucial presentation to a skeptical and highly critical board of directors", "a group of colleagues resistant to change and distrustful of new initiatives", "a networking event with influential but intimidating industry leaders and decision-makers"],
-                    "challenges": ["an open interpersonal conflict that divides the team and paralyzes decision-making processes", "widespread disengagement following broken promises by leadership and failed initiatives"],
-                    "options": [("actively lead discussions to impose your vision and drive decisions forward", "listen carefully to all viewpoints before proposing a comprehensive synthesis"), ("convince through the force of your argumentation and personal charisma", "lead by example through your actions and let concrete results speak")]
-                },
-                "ar": {
-                    "actions": ["التحدث في اجتماع يسوده صراع مفتوح بين أقسام ذات مواقف راسخة", "تحفيز فريق محبط بعد عدة إخفاقات ونكسات متتالية", "إقامة علاقات مع عملاء صعبين ومطالبين لديهم توقعات عالية"],
-                    "contexts": ["عرض تقديمي حاسم أمام مجلس إدارة متشكك وناقد للغاية", "مجموعة من الزملاء المقاومين للتغيير والمتشككين في المبادرات الجديدة", "حدث تواصل مع قادة صناعة مؤثرين ولكن مخيفين وصناع قرار"],
-                    "challenges": ["صراع شخصي مفتوح يقسم الفريق ويشل عمليات اتخاذ القرار", "انفصال واسع النطاق بعد وعود مكسورة من القيادة ومبادرات فاشلة"],
-                    "options": [("قيادة النقاشات بنشاط لفرض رؤيتك ودفع القرارات قدماً", "الاستماع بعناية لجميع وجهات النظر قبل اقتراح تركيب شامل"), ("الإقناع من خلال قوة حجتك والكاريزما الشخصية", "القيادة بالمثال من خلال أفعالك ودع النتائج الملموسة تتحدث")]
-                }
-            },
-            "agréabilité": {
-                "fr": {
-                    "actions": ["résoudre un conflit majeur entre équipes avec des enjeux financiers importants", "collaborer avec des partenaires aux intérêts divergents et aux egos surdimensionnés", "soutenir un collègue en difficulté malgré la pression hiérarchique"],
-                    "contexts": ["une négociation tendue où chaque partie défend ses intérêts avec acharnement", "une équipe multiculturelle sous pression avec des malentendus fréquents", "une fusion d'entreprises créant tensions et inquiétudes sur l'emploi"],
-                    "challenges": ["une opposition farouche de certains membres influents qui sabotent les initiatives", "des intérêts financiers divergents qui rendent tout compromis apparemment impossible"],
-                    "options": [("défendre fermement votre position pour protéger vos intérêts", "rechercher activement un compromis acceptable pour toutes les parties"), ("prioriser les besoins des autres même au détriment de vos objectifs", "maintenir un équilibre entre empathie et atteinte de vos propres buts")]
-                },
-                "en": {
-                    "actions": ["resolve a major conflict between teams with significant financial stakes and competing interests", "collaborate with partners who have divergent goals and oversized egos", "support a struggling colleague despite pressure from hierarchy and politics"],
-                    "contexts": ["a tense negotiation where each party fiercely defends their interests with unwillingness to compromise", "a multicultural team under pressure with frequent misunderstandings and cultural clashes", "a company merger creating tensions and employment anxieties among staff"],
-                    "challenges": ["fierce opposition from influential members who actively sabotage collaborative initiatives", "divergent financial interests that make any meaningful compromise seemingly impossible"],
-                    "options": [("firmly defend your position to protect your core interests and objectives", "actively seek a compromise that remains acceptable to all involved parties"), ("prioritize others' needs even at the expense of your own objectives", "maintain balance between empathy and achieving your own essential goals")]
-                },
-                "ar": {
-                    "actions": ["حل صراع كبير بين فرق ذات مصالح مالية كبيرة ومصالح متنافسة", "التعاون مع شركاء لديهم أهداف متباينة وغرور مفرط", "دعم زميل يواجه صعوبات رغم الضغط من التسلسل الهرمي والسياسات"],
-                    "contexts": ["مفاوضة متوترة حيث يدافع كل طرف بشراسة عن مصالحه مع عدم الرغبة في التنازل", "فريق متعدد الثقافات تحت ضغط مع سوء فهم متكرر وصدامات ثقافية", "اندماج شركات يخلق توترات وقلق حول الوظائف بين الموظفين"],
-                    "challenges": ["معارضة شرسة من أعضاء مؤثرين يخربون بنشاط المبادرات التعاونية", "مصالح مالية متباينة تجعل أي تنازل ذي معنى يبدو مستحيلاً"],
-                    "options": [("الدفاع بحزم عن موقفك لحماية مصالحك وأهدافك الأساسية", "البحث بنشاط عن تنازل يبقى مقبولاً لجميع الأطراف المعنية"), ("إعطاء الأولوية لاحتياجات الآخرين حتى على حساب أهدافك الخاصة", "الحفاظ على التوازن بين التعاطف وتحقيق أهدافك الأساسية")]
-                }
-            },
-            "stabilité émotionnelle": {
-                "fr": {
-                    "actions": ["gérer une crise majeure qui menace la survie de l'entreprise", "maintenir votre efficacité lors d'une restructuration avec licenciements massifs", "prendre des décisions cruciales sous une pression médiatique intense"],
-                    "contexts": ["une situation de crise où votre réputation professionnelle est publiquement remise en question", "une période d'incertitude prolongée sur l'avenir de votre poste", "un environnement toxique avec des critiques constantes et un manque de reconnaissance"],
-                    "challenges": ["une pression psychologique intense avec des attaques personnelles répétées", "l'accumulation de plusieurs échecs successifs remettant en cause vos compétences"],
-                    "options": [("anticiper et préparer des plans détaillés pour tous les scénarios possibles", "réagir avec agilité aux événements au fur et à mesure qu'ils se présentent"), ("garder vos émotions sous contrôle total en toutes circonstances", "exprimer vos émotions de manière authentique tout en restant professionnel")]
-                },
-                "en": {
-                    "actions": ["manage a major crisis that threatens the company's survival and your career", "maintain effectiveness during restructuring with massive layoffs and uncertainty", "make crucial decisions under intense media pressure and public scrutiny"],
-                    "contexts": ["a crisis situation where your professional reputation is publicly questioned and attacked", "a prolonged period of uncertainty about your job security and future prospects", "a toxic environment with constant criticism and complete lack of recognition or support"],
-                    "challenges": ["intense psychological pressure with repeated personal attacks on your competence and character", "accumulation of several successive failures that fundamentally question your abilities"],
-                    "options": [("anticipate and prepare detailed contingency plans for all possible scenarios", "react with agility to events as they unfold without over-planning"), ("keep your emotions under complete control in all circumstances", "express your emotions authentically while maintaining professional standards")]
-                },
-                "ar": {
-                    "actions": ["إدارة أزمة كبيرة تهدد بقاء الشركة ومسيرتك المهنية", "الحفاظ على الفعالية أثناء إعادة الهيكلة مع تسريحات جماعية وعدم يقين", "اتخاذ قرارات حاسمة تحت ضغط إعلامي شديد ومراقبة عامة"],
-                    "contexts": ["حالة أزمة حيث يتم التشكيك في سمعتك المهنية ومهاجمتها علناً", "فترة طويلة من عدم اليقين حول أمان وظيفتك وآفاقك المستقبلية", "بيئة سامة مع انتقادات مستمرة وغياب تام للاعتراف أو الدعم"],
-                    "challenges": ["ضغط نفسي شديد مع هجمات شخصية متكررة على كفاءتك وشخصيتك", "تراكم عدة إخفاقات متتالية تشكك جذرياً في قدراتك"],
-                    "options": [("توقع وإعداد خطط طوارئ مفصلة لجميع السيناريوهات المحتملة", "التفاعل برشاقة مع الأحداث كما تتكشف دون إفراط في التخطيط"), ("إبقاء مشاعرك تحت السيطرة الكاملة في جميع الظروف", "التعبير عن مشاعرك بصدق مع الحفاظ على المعايير المهنية")]
-                }
-            }
-        },
-        "disc": {
-            "dominant": {
-                "fr": {
-                    "actions": ["prendre des décisions stratégiques cruciales dans un contexte d'incertitude totale", "diriger une équipe résistante vers des objectifs ambitieux et controversés", "imposer des changements nécessaires malgré une opposition organisée"],
-                    "contexts": ["une situation de crise nécessitant des décisions rapides avec des informations incomplètes", "un projet de transformation majeure avec des résistances à tous les niveaux", "une compétition acharnée où la moindre hésitation peut être fatale"],
-                    "challenges": ["une opposition directe et coordonnée de la part d'acteurs influents", "des ressources insuffisantes pour atteindre des objectifs très ambitieux"],
-                    "options": [("déléguer la responsabilité tout en gardant le contrôle final", "superviser directement chaque étape pour garantir l'exécution"), ("agir immédiatement sur la base de votre intuition", "analyser en profondeur toutes les options avant de décider")]
-                },
-                "en": {
-                    "actions": ["make crucial strategic decisions in complete uncertainty with high stakes", "lead a resistant team toward ambitious and controversial objectives", "impose necessary changes despite organized opposition from stakeholders"],
-                    "contexts": ["a crisis situation requiring rapid decisions with incomplete information and time pressure", "a major transformation project with resistance at all organizational levels", "intense competition where any hesitation could be fatal to success"],
-                    "challenges": ["direct and coordinated opposition from influential actors with their own agendas", "insufficient resources to achieve highly ambitious objectives within tight constraints"],
-                    "options": [("delegate responsibility while maintaining ultimate control over outcomes", "directly supervise each step to guarantee proper execution"), ("act immediately based on your intuition and experience", "thoroughly analyze all options before making any decisions")]
-                },
-                "ar": {
-                    "actions": ["اتخاذ قرارات استراتيجية حاسمة في عدم يقين كامل مع مخاطر عالية", "قيادة فريق مقاوم نحو أهداف طموحة ومثيرة للجدل", "فرض تغييرات ضرورية رغم معارضة منظمة من أصحاب المصلحة"],
-                    "contexts": ["حالة أزمة تتطلب قرارات سريعة بمعلومات ناقصة وضغط زمني", "مشروع تحويل كبير مع مقاومة على جميع المستويات التنظيمية", "منافسة شديدة حيث يمكن أن يكون أي تردد قاتلاً للنجاح"],
-                    "challenges": ["معارضة مباشرة ومنسقة من فاعلين مؤثرين لديهم أجنداتهم الخاصة", "موارد غير كافية لتحقيق أهداف طموحة جداً ضمن قيود ضيقة"],
-                    "options": [("تفويض المسؤولية مع الحفاظ على السيطرة النهائية على النتائج", "الإشراف المباشر على كل خطوة لضمان التنفيذ السليم"), ("التصرف فوراً بناءً على حدسك وخبرتك", "تحليل جميع الخيارات بدقة قبل اتخاذ أي قرارات")]
-                }
-            },
-            "influent": {
-                "fr": {
-                    "actions": ["convaincre un groupe sceptique avec des intérêts divergents", "inspirer une équipe démotivée après des échecs répétés", "présenter une idée révolutionnaire à des décideurs conservateurs"],
-                    "contexts": ["une audience hostile avec des préjugés établis contre votre proposition", "une réunion de crise où la panique et le pessimisme dominent", "une négociation complexe avec des parties prenantes influentes"],
-                    "challenges": ["un manque d'attention généralisé et une distraction constante", "une résistance culturelle profonde au changement organisationnel"],
-                    "options": [("utiliser l'émotion et les histoires personnelles pour toucher", "s'appuyer exclusivement sur des données factuelles et des preuves"), ("motiver par l'enthousiasme et la vision inspirante", "structurer méticuleusement l'argumentation logique")]
-                },
-                "en": {
-                    "actions": ["convince a skeptical group with divergent interests and competing priorities", "inspire a demotivated team after repeated failures and setbacks", "present a revolutionary idea to conservative decision-makers with established mindsets"],
-                    "contexts": ["a hostile audience with established prejudices against your proposal", "a crisis meeting where panic and pessimism dominate the atmosphere", "a complex negotiation with influential stakeholders and competing agendas"],
-                    "challenges": ["widespread lack of attention and constant distractions from competing priorities", "deep cultural resistance to organizational change and new methodologies"],
-                    "options": [("use emotion and personal stories to connect and touch hearts", "rely exclusively on factual data and concrete evidence"), ("motivate through enthusiasm and inspiring vision of the future", "meticulously structure logical argumentation and reasoning")]
-                },
-                "ar": {
-                    "actions": ["إقناع مجموعة متشككة ذات مصالح متباينة وأولويات متنافسة", "إلهام فريق محبط بعد إخفاقات ونكسات متكررة", "تقديم فكرة ثورية لصناع قرار محافظين بعقليات راسخة"],
-                    "contexts": ["جمهور عدائي مع تحيزات راسخة ضد اقتراحك", "اجتماع أزمة حيث يهيمن الذعر والتشاؤم على الأجواء", "مفاوضة معقدة مع أصحاب مصلحة مؤثرين وأجندات متنافسة"],
-                    "challenges": ["نقص واسع في الانتباه وتشتيت مستمر من أولويات متنافسة", "مقاومة ثقافية عميقة للتغيير التنظيمي والمنهجيات الجديدة"],
-                    "options": [("استخدام العاطفة والقصص الشخصية للتواصل ولمس القلوب", "الاعتماد حصرياً على البيانات الواقعية والأدلة الملموسة"), ("التحفيز من خلال الحماس والرؤية الملهمة للمستقبل", "هيكلة الحجة المنطقية والتفكير بدقة")]
-                }
-            },
-            "stable": {
-                "fr": {
-                    "actions": ["maintenir la cohésion dans une équipe fragmentée par des conflits internes", "soutenir des collègues pendant une restructuration majeure avec licenciements", "gérer un changement organisationnel tout en préservant la culture d'entreprise"],
-                    "contexts": ["une équipe multiculturelle avec des tensions ethniques et générérationnelles", "une période de transition prolongée avec une incertitude sur l'avenir", "un environnement de travail tendu avec une pression constante sur les résultats"],
-                    "challenges": ["un conflit ouvert entre différentes factions avec des loyautés divisées", "une instabilité organisationnelle chronique affectant le moral des équipes"],
-                    "options": [("préserver absolument la stabilité existante même si elle freine l'innovation", "adopter progressivement l'innovation tout en maintenant les bases solides"), ("agir systématiquement en médiateur neutre dans tous les conflits", "prendre des positions claires quand les valeurs fondamentales sont en jeu")]
-                },
-                "en": {
-                    "actions": ["maintain cohesion in a team fragmented by internal conflicts and personal disputes", "support colleagues during major restructuring with layoffs and uncertainty", "manage organizational change while preserving essential company culture and values"],
-                    "contexts": ["a multicultural team with ethnic and generational tensions affecting collaboration", "a prolonged transition period with persistent uncertainty about the future", "a tense work environment with constant pressure on results and performance"],
-                    "challenges": ["open conflict between different factions with divided loyalties and competing interests", "chronic organizational instability severely affecting team morale and productivity"],
-                    "options": [("absolutely preserve existing stability even if it hinders innovation and growth", "gradually adopt innovation while maintaining solid foundational structures"), ("systematically act as neutral mediator in all conflicts and disputes", "take clear positions when fundamental values and principles are at stake")]
-                },
-                "ar": {
-                    "actions": ["الحفاظ على التماسك في فريق مجزأ بصراعات داخلية ونزاعات شخصية", "دعم الزملاء أثناء إعادة هيكلة كبيرة مع تسريحات وعدم يقين", "إدارة التغيير التنظيمي مع الحفاظ على ثقافة الشركة الأساسية والقيم"],
-                    "contexts": ["فريق متعدد الثقافات مع توترات عرقية وجيلية تؤثر على التعاون", "فترة انتقالية طويلة مع عدم يقين مستمر حول المستقبل", "بيئة عمل متوترة مع ضغط مستمر على النتائج والأداء"],
-                    "challenges": ["صراع مفتوح بين فصائل مختلفة مع ولاءات مقسمة ومصالح متنافسة", "عدم استقرار تنظيمي مزمن يؤثر بشدة على معنويات الفريق والإنتاجية"],
-                    "options": [("الحفاظ المطلق على الاستقرار الموجود حتى لو أعاق الابتكار والنمو", "تبني الابتكار تدريجياً مع الحفاظ على الهياكل الأساسية الصلبة"), ("العمل بشكل منهجي كوسيط محايد في جميع الصراعات والنزاعات", "اتخاذ مواقف واضحة عندما تكون القيم والمبادئ الأساسية على المحك")]
-                }
-            },
-            "conforme": {
-                "fr": {
-                    "actions": ["analyser une situation complexe avec des données contradictoires et incomplètes", "assurer la conformité réglementaire dans un environnement en évolution constante", "optimiser un processus critique avec des contraintes de qualité strictes"],
-                    "contexts": ["une décision stratégique majeure avec des implications légales importantes", "un cadre réglementé avec des audits fréquents et des sanctions potentielles", "un projet détaillé nécessitant une précision absolue et zéro défaut"],
-                    "challenges": ["une ambiguïté persistante dans les règles et réglementations", "une pression constante pour accélérer au détriment de la rigueur"],
-                    "options": [("suivre rigoureusement les normes établies même si elles ralentissent", "prendre des initiatives calculées pour améliorer l'efficacité"), ("prioriser systématiquement la précision absolue dans tous les détails", "favoriser la flexibilité opérationnelle selon les contraintes du moment")]
-                },
-                "en": {
-                    "actions": ["analyze a complex situation with contradictory and incomplete data requiring thorough investigation", "ensure regulatory compliance in a constantly evolving environment with changing standards", "optimize a critical process with strict quality constraints and zero-tolerance for errors"],
-                    "contexts": ["a major strategic decision with significant legal implications and compliance requirements", "a highly regulated framework with frequent audits and potential severe sanctions", "a detailed project requiring absolute precision and zero defects in execution"],
-                    "challenges": ["persistent ambiguity in rules and regulations creating uncertainty in decision-making", "constant pressure to accelerate processes at the expense of thoroughness and rigor"],
-                    "options": [("rigorously follow established standards even if they significantly slow progress", "take calculated initiatives to improve efficiency while maintaining compliance"), ("systematically prioritize absolute precision in every detail and aspect", "favor operational flexibility according to situational constraints and demands")]
-                },
-                "ar": {
-                    "actions": ["تحليل موقف معقد مع بيانات متناقضة وناقصة تتطلب تحقيقاً شاملاً", "ضمان الامتثال التنظيمي في بيئة متطورة باستمرار مع معايير متغيرة", "تحسين عملية حرجة مع قيود جودة صارمة وعدم تسامح مع الأخطاء"],
-                    "contexts": ["قرار استراتيجي كبير مع آثار قانونية مهمة ومتطلبات امتثال", "إطار شديد التنظيم مع تدقيقات متكررة وعقوبات محتملة شديدة", "مشروع مفصل يتطلب دقة مطلقة وصفر عيوب في التنفيذ"],
-                    "challenges": ["غموض مستمر في القوانين واللوائح يخلق عدم يقين في اتخاذ القرار", "ضغط مستمر لتسريع العمليات على حساب الشمولية والصرامة"],
-                    "options": [("اتباع المعايير المعتمدة بصرامة حتى لو أبطأت التقدم بشكل كبير", "اتخاذ مبادرات محسوبة لتحسين الكفاءة مع الحفاظ على الامتثال"), ("إعطاء الأولوية بشكل منهجي للدقة المطلقة في كل تفصيل وجانب", "تفضيل المرونة التشغيلية وفقاً للقيود والمطالب الظرفية")]
-                }
-            }
-        },
-        "bien_etre": {
-            "fr": {
-                "actions": ["équilibrer travail et vie personnelle lors d'une période de surcharge professionnelle", "maintenir votre motivation malgré un manque de reconnaissance persistant", "gérer votre énergie pendant des projets marathons avec des délais impossibles"],
-                "contexts": ["une période de forte charge avec des heures supplémentaires obligatoires", "une équipe sous pression constante avec un management dysfonctionnel", "un projet long et stressant sans perspectives d'amélioration à court terme"],
-                "challenges": ["un épuisement professionnel imminent avec des signes de burnout", "un manque total de reconnaissance malgré des efforts exceptionnels"],
-                "options": [("prioriser absolument le repos même si cela affecte les résultats", "maintenir la productivité malgré la fatigue croissante"), ("exprimer clairement vos besoins et limites à la hiérarchie", "vous adapter silencieusement aux attentes sans protester")]
-            },
-            "en": {
-                "actions": ["balance work and personal life during a period of professional overload and excessive demands", "maintain motivation despite persistent lack of recognition and appreciation from management", "manage your energy during marathon projects with impossible deadlines and unrealistic expectations"],
-                "contexts": ["a period of heavy workload with mandatory overtime and weekend work", "a team under constant pressure with dysfunctional management and toxic leadership", "a long and stressful project with no prospects for improvement in the near future"],
-                "challenges": ["imminent professional burnout with clear warning signs and symptoms", "complete lack of recognition despite exceptional efforts and outstanding contributions"],
-                "options": [("absolutely prioritize rest even if it negatively affects results and performance", "maintain productivity despite growing fatigue and declining mental health"), ("clearly express your needs and limits to hierarchy and management", "silently adapt to expectations without protest or resistance")]
-            },
-            "ar": {
-                "actions": ["توازن العمل والحياة الشخصية خلال فترة حمولة مهنية زائدة ومطالب مفرطة", "الحفاظ على الدافعية رغم النقص المستمر في الاعتراف والتقدير من الإدارة", "إدارة طاقتك خلال مشاريع ماراثونية مع مواعيد نهائية مستحيلة وتوقعات غير واقعية"],
-                "contexts": ["فترة عبء عمل ثقيل مع ساعات إضافية إجبارية وعمل نهاية الأسبوع", "فريق تحت ضغط مستمر مع إدارة مختلة وقيادة سامة", "مشروع طويل ومجهد دون آفاق للتحسن في المستقبل القريب"],
-                "challenges": ["إرهاق مهني وشيك مع علامات تحذيرية وأعراض واضحة", "غياب كامل للاعتراف رغم الجهود الاستثنائية والمساهمات المتميزة"],
-                "options": [("إعطاء الأولوية المطلقة للراحة حتى لو أثر سلباً على النتائج والأداء", "الحفاظ على الإنتاجية رغم التعب المتزايد وتدهور الصحة النفسية"), ("التعبير بوضوح عن احتياجاتك وحدودك للتسلسل الهرمي والإدارة", "التكيف بصمت مع التوقعات دون احتجاج أو مقاومة")]
-            }
-        },
-        "resilience_ie": {
-            "fr": {
-                "actions": ["gérer une situation de stress extrême qui dépasse vos capacités habituelles", "adapter votre approche lors d'échecs répétés dans des domaines critiques", "comprendre et gérer les émotions complexes de votre équipe en crise"],
-                "contexts": ["une crise personnelle et professionnelle simultanée affectant tous les aspects de votre vie", "un conflit interpersonnel majeur avec des conséquences sur votre carrière", "une décision cruciale avec des implications émotionnelles lourdes pour votre entourage"],
-                "challenges": ["une surcharge émotionnelle massive dépassant vos mécanismes de défense", "une incertitude prolongée sur l'avenir créant anxiété et stress chronique"],
-                "options": [("contrôler rigoureusement vos émotions en toutes circonstances", "les exprimer authentiquement tout en restant constructif"), ("anticiper méthodiquement tous les obstacles potentiels", "réagir spontanément aux défis au moment où ils surviennent")]
-            },
-            "en": {
-                "actions": ["manage an extreme stress situation that exceeds your usual coping capacities", "adapt your approach following repeated failures in critical areas of responsibility", "understand and manage complex emotions of your team during organizational crisis"],
-                "contexts": ["a simultaneous personal and professional crisis affecting all aspects of your life", "a major interpersonal conflict with significant consequences for your career trajectory", "a crucial decision with heavy emotional implications for your family and colleagues"],
-                "challenges": ["massive emotional overload exceeding your normal defense mechanisms and coping strategies", "prolonged uncertainty about the future creating chronic anxiety and persistent stress"],
-                "options": [("rigorously control your emotions in all circumstances and situations", "authentically express them while remaining constructive and solution-focused"), ("methodically anticipate all potential obstacles and prepare contingencies", "spontaneously react to challenges as they arise in real-time")]
-            },
-            "ar": {
-                "actions": ["إدارة موقف ضغط شديد يتجاوز قدراتك المعتادة على التأقلم", "تكييف نهجك بعد إخفاقات متكررة في مجالات مسؤولية حرجة", "فهم وإدارة المشاعر المعقدة لفريقك أثناء أزمة تنظيمية"],
-                "contexts": ["أزمة شخصية ومهنية متزامنة تؤثر على جميع جوانب حياتك", "صراع شخصي كبير مع عواقب مهمة على مسار مسيرتك المهنية", "قرار حاسم مع آثار عاطفية ثقيلة على عائلتك وزملائك"],
-                "challenges": ["حمولة عاطفية هائلة تتجاوز آليات دفاعك العادية واستراتيجيات التأقلم", "عدم يقين طويل حول المستقبل يخلق قلقاً مزمناً وضغطاً مستمراً"],
-                "options": [("السيطرة بصرامة على مشاعرك في جميع الظروف والمواقف", "التعبير عنها بصدق مع البقاء بناءً ومركزاً على الحلول"), ("توقع منهجي لجميع العقبات المحتملة وإعداد خطط طوارئ", "التفاعل بعفوية مع التحديات كما تنشأ في الوقت الفعلي")]
-            }
-        }
-    }
+#     trait_contexts = {
+#         "big_five": {
+#             "ouverture": {
+#                 "fr": {
+#                     "actions": ["explorer de nouvelles idées dans un projet complexe impliquant plusieurs départements", "résoudre des problèmes créatifs avec des contraintes budgétaires strictes", "innover face à une résistance organisationnelle"],
+#                     "contexts": ["un projet de transformation digitale avec des équipes résistantes au changement", "une situation de crise nécessitant des solutions non conventionnelles", "une collaboration avec des partenaires aux cultures très différentes"],
+#                     "challenges": ["un changement soudain de direction stratégique imposé par la direction", "des contraintes réglementaires qui limitent les options créatives"],
+#                     "options": [("suivre des méthodes éprouvées pour minimiser les risques", "créer des solutions entièrement nouvelles malgré l'incertitude"), ("prendre des risques calculés pour innover", "préserver la stabilité et les processus existants")]
+#                 },
+#                 "en": {
+#                     "actions": ["explore innovative solutions in a multi-stakeholder project with conflicting priorities", "solve complex problems when established methods have failed repeatedly", "innovate within a traditional organization resistant to change"],
+#                     "contexts": ["a digital transformation project involving skeptical senior management and diverse teams", "a crisis situation requiring unconventional approaches with limited resources", "a cross-cultural collaboration with partners who have opposing methodologies"],
+#                     "challenges": ["a sudden strategic pivot mandated by leadership with tight deadlines", "regulatory constraints that severely limit creative options and require compliance"],
+#                     "options": [("follow proven methodologies to ensure predictable outcomes", "create entirely new solutions despite inherent uncertainty"), ("take calculated risks to drive innovation forward", "preserve organizational stability and existing proven processes")]
+#                 },
+#                 "ar": {
+#                     "actions": ["استكشاف حلول مبتكرة في مشروع متعدد أصحاب المصلحة مع أولويات متضاربة", "حل مشاكل معقدة عندما فشلت الطرق التقليدية مراراً", "الابتكار داخل منظمة تقليدية مقاومة للتغيير"],
+#                     "contexts": ["مشروع تحول رقمي يشمل إدارة عليا متشككة وفرق متنوعة", "حالة أزمة تتطلب مناهج غير تقليدية مع موارد محدودة", "تعاون عبر ثقافي مع شركاء لديهم منهجيات متعارضة"],
+#                     "challenges": ["تغيير استراتيجي مفاجئ تفرضه القيادة مع مواعيد نهائية ضيقة", "قيود تنظيمية تحد بشدة من الخيارات الإبداعية وتتطلب الامتثال"],
+#                     "options": [("اتباع منهجيات مجربة لضمان نتائج متوقعة", "إنشاء حلول جديدة تماماً رغم عدم اليقين المتأصل"), ("المخاطرة المحسوبة لدفع الابتكار قدماً", "الحفاظ على استقرار المنظمة والعمليات المجربة")]
+#                 }
+#             },
+#             "conscienciosité": {
+#                 "fr": {
+#                     "actions": ["organiser un projet complexe avec des équipes dispersées géographiquement", "prioriser des tâches contradictoires sous pression temporelle extrême", "assurer la qualité dans un environnement où les standards changent fréquemment"],
+#                     "contexts": ["un lancement de produit critique avec des dépendances multiples et des risques élevés", "une restructuration organisationnelle nécessitant une coordination méticuleuse", "une équipe internationale avec des fuseaux horaires et cultures de travail différents"],
+#                     "challenges": ["des priorités conflictuelles imposées par différents directeurs avec des objectifs incompatibles", "des ressources limitées qui obligent à faire des compromis sur la qualité"],
+#                     "options": [("planifier exhaustivement chaque détail avant de commencer", "s'adapter continuellement aux changements en cours de route"), ("viser la perfection quitte à dépasser les délais", "optimiser l'efficacité même si cela compromet certains détails")]
+#                 },
+#                 "en": {
+#                     "actions": ["organize a complex project with geographically dispersed teams across time zones", "prioritize conflicting tasks under extreme time pressure with shifting requirements", "ensure quality standards in an environment where criteria change frequently"],
+#                     "contexts": ["a critical product launch with multiple dependencies and high stakes for company reputation", "an organizational restructuring requiring meticulous coordination and change management", "an international team with different time zones and varying work cultures"],
+#                     "challenges": ["conflicting priorities imposed by different directors with incompatible objectives and expectations", "severely limited resources forcing difficult compromises on quality standards"],
+#                     "options": [("plan every detail exhaustively before beginning any execution", "continuously adapt to changes and emerging requirements during implementation"), ("strive for perfection even if it means exceeding deadlines", "optimize efficiency even if it compromises certain quality details")]
+#                 },
+#                 "ar": {
+#                     "actions": ["تنظيم مشروع معقد مع فرق موزعة جغرافياً عبر مناطق زمنية مختلفة", "ترتيب أولوية مهام متضاربة تحت ضغط زمني شديد مع متطلبات متغيرة", "ضمان معايير الجودة في بيئة تتغير فيها المعايير بشكل متكرر"],
+#                     "contexts": ["إطلاق منتج حاسم مع تبعيات متعددة ومخاطر عالية لسمعة الشركة", "إعادة هيكلة تنظيمية تتطلب تنسيقاً دقيقاً وإدارة التغيير", "فريق دولي مع مناطق زمنية مختلفة وثقافات عمل متنوعة"],
+#                     "challenges": ["أولويات متضاربة تفرضها مديرون مختلفون بأهداف وتوقعات غير متوافقة", "موارد محدودة بشدة تجبر على تنازلات صعبة حول معايير الجودة"],
+#                     "options": [("التخطيط لكل التفاصيل بشمولية قبل البدء بأي تنفيذ", "التكيف المستمر مع التغييرات والمتطلبات الناشئة أثناء التنفيذ"), ("السعي للكمال حتى لو عنى ذلك تجاوز المواعيد النهائية", "تحسين الكفاءة حتى لو أضر ببعض تفاصيل الجودة")]
+#                 }
+#             },
+#             "extraversion": {
+#                 "fr": {
+#                     "actions": ["prendre la parole dans une réunion où règne un conflit ouvert entre départements", "motiver une équipe démoralisée après plusieurs échecs consécutifs", "établir des relations avec des clients difficiles et exigeants"],
+#                     "contexts": ["une présentation cruciale devant un comité de direction sceptique et critique", "un groupe de collaborateurs résistants au changement et méfiants", "un événement de networking avec des personnalités influentes mais intimidantes"],
+#                     "challenges": ["un conflit interpersonnel ouvert qui divise l'équipe et paralyse les décisions", "un manque d'engagement généralisé suite à des promesses non tenues par la direction"],
+#                     "options": [("diriger activement les discussions pour imposer votre vision", "écouter attentivement tous les points de vue avant de proposer une synthèse"), ("convaincre par la force de votre argumentation et votre charisme", "montrer l'exemple par vos actions et laisser les résultats parler")]
+#                 },
+#                 "en": {
+#                     "actions": ["speak up in a meeting where open conflict exists between departments with entrenched positions", "motivate a demoralized team after several consecutive failures and setbacks", "establish relationships with difficult and demanding clients who have high expectations"],
+#                     "contexts": ["a crucial presentation to a skeptical and highly critical board of directors", "a group of colleagues resistant to change and distrustful of new initiatives", "a networking event with influential but intimidating industry leaders and decision-makers"],
+#                     "challenges": ["an open interpersonal conflict that divides the team and paralyzes decision-making processes", "widespread disengagement following broken promises by leadership and failed initiatives"],
+#                     "options": [("actively lead discussions to impose your vision and drive decisions forward", "listen carefully to all viewpoints before proposing a comprehensive synthesis"), ("convince through the force of your argumentation and personal charisma", "lead by example through your actions and let concrete results speak")]
+#                 },
+#                 "ar": {
+#                     "actions": ["التحدث في اجتماع يسوده صراع مفتوح بين أقسام ذات مواقف راسخة", "تحفيز فريق محبط بعد عدة إخفاقات ونكسات متتالية", "إقامة علاقات مع عملاء صعبين ومطالبين لديهم توقعات عالية"],
+#                     "contexts": ["عرض تقديمي حاسم أمام مجلس إدارة متشكك وناقد للغاية", "مجموعة من الزملاء المقاومين للتغيير والمتشككين في المبادرات الجديدة", "حدث تواصل مع قادة صناعة مؤثرين ولكن مخيفين وصناع قرار"],
+#                     "challenges": ["صراع شخصي مفتوح يقسم الفريق ويشل عمليات اتخاذ القرار", "انفصال واسع النطاق بعد وعود مكسورة من القيادة ومبادرات فاشلة"],
+#                     "options": [("قيادة النقاشات بنشاط لفرض رؤيتك ودفع القرارات قدماً", "الاستماع بعناية لجميع وجهات النظر قبل اقتراح تركيب شامل"), ("الإقناع من خلال قوة حجتك والكاريزما الشخصية", "القيادة بالمثال من خلال أفعالك ودع النتائج الملموسة تتحدث")]
+#                 }
+#             },
+#             "agréabilité": {
+#                 "fr": {
+#                     "actions": ["résoudre un conflit majeur entre équipes avec des enjeux financiers importants", "collaborer avec des partenaires aux intérêts divergents et aux egos surdimensionnés", "soutenir un collègue en difficulté malgré la pression hiérarchique"],
+#                     "contexts": ["une négociation tendue où chaque partie défend ses intérêts avec acharnement", "une équipe multiculturelle sous pression avec des malentendus fréquents", "une fusion d'entreprises créant tensions et inquiétudes sur l'emploi"],
+#                     "challenges": ["une opposition farouche de certains membres influents qui sabotent les initiatives", "des intérêts financiers divergents qui rendent tout compromis apparemment impossible"],
+#                     "options": [("défendre fermement votre position pour protéger vos intérêts", "rechercher activement un compromis acceptable pour toutes les parties"), ("prioriser les besoins des autres même au détriment de vos objectifs", "maintenir un équilibre entre empathie et atteinte de vos propres buts")]
+#                 },
+#                 "en": {
+#                     "actions": ["resolve a major conflict between teams with significant financial stakes and competing interests", "collaborate with partners who have divergent goals and oversized egos", "support a struggling colleague despite pressure from hierarchy and politics"],
+#                     "contexts": ["a tense negotiation where each party fiercely defends their interests with unwillingness to compromise", "a multicultural team under pressure with frequent misunderstandings and cultural clashes", "a company merger creating tensions and employment anxieties among staff"],
+#                     "challenges": ["fierce opposition from influential members who actively sabotage collaborative initiatives", "divergent financial interests that make any meaningful compromise seemingly impossible"],
+#                     "options": [("firmly defend your position to protect your core interests and objectives", "actively seek a compromise that remains acceptable to all involved parties"), ("prioritize others' needs even at the expense of your own objectives", "maintain balance between empathy and achieving your own essential goals")]
+#                 },
+#                 "ar": {
+#                     "actions": ["حل صراع كبير بين فرق ذات مصالح مالية كبيرة ومصالح متنافسة", "التعاون مع شركاء لديهم أهداف متباينة وغرور مفرط", "دعم زميل يواجه صعوبات رغم الضغط من التسلسل الهرمي والسياسات"],
+#                     "contexts": ["مفاوضة متوترة حيث يدافع كل طرف بشراسة عن مصالحه مع عدم الرغبة في التنازل", "فريق متعدد الثقافات تحت ضغط مع سوء فهم متكرر وصدامات ثقافية", "اندماج شركات يخلق توترات وقلق حول الوظائف بين الموظفين"],
+#                     "challenges": ["معارضة شرسة من أعضاء مؤثرين يخربون بنشاط المبادرات التعاونية", "مصالح مالية متباينة تجعل أي تنازل ذي معنى يبدو مستحيلاً"],
+#                     "options": [("الدفاع بحزم عن موقفك لحماية مصالحك وأهدافك الأساسية", "البحث بنشاط عن تنازل يبقى مقبولاً لجميع الأطراف المعنية"), ("إعطاء الأولوية لاحتياجات الآخرين حتى على حساب أهدافك الخاصة", "الحفاظ على التوازن بين التعاطف وتحقيق أهدافك الأساسية")]
+#                 }
+#             },
+#             "stabilité émotionnelle": {
+#                 "fr": {
+#                     "actions": ["gérer une crise majeure qui menace la survie de l'entreprise", "maintenir votre efficacité lors d'une restructuration avec licenciements massifs", "prendre des décisions cruciales sous une pression médiatique intense"],
+#                     "contexts": ["une situation de crise où votre réputation professionnelle est publiquement remise en question", "une période d'incertitude prolongée sur l'avenir de votre poste", "un environnement toxique avec des critiques constantes et un manque de reconnaissance"],
+#                     "challenges": ["une pression psychologique intense avec des attaques personnelles répétées", "l'accumulation de plusieurs échecs successifs remettant en cause vos compétences"],
+#                     "options": [("anticiper et préparer des plans détaillés pour tous les scénarios possibles", "réagir avec agilité aux événements au fur et à mesure qu'ils se présentent"), ("garder vos émotions sous contrôle total en toutes circonstances", "exprimer vos émotions de manière authentique tout en restant professionnel")]
+#                 },
+#                 "en": {
+#                     "actions": ["manage a major crisis that threatens the company's survival and your career", "maintain effectiveness during restructuring with massive layoffs and uncertainty", "make crucial decisions under intense media pressure and public scrutiny"],
+#                     "contexts": ["a crisis situation where your professional reputation is publicly questioned and attacked", "a prolonged period of uncertainty about your job security and future prospects", "a toxic environment with constant criticism and complete lack of recognition or support"],
+#                     "challenges": ["intense psychological pressure with repeated personal attacks on your competence and character", "accumulation of several successive failures that fundamentally question your abilities"],
+#                     "options": [("anticipate and prepare detailed contingency plans for all possible scenarios", "react with agility to events as they unfold without over-planning"), ("keep your emotions under complete control in all circumstances", "express your emotions authentically while maintaining professional standards")]
+#                 },
+#                 "ar": {
+#                     "actions": ["إدارة أزمة كبيرة تهدد بقاء الشركة ومسيرتك المهنية", "الحفاظ على الفعالية أثناء إعادة الهيكلة مع تسريحات جماعية وعدم يقين", "اتخاذ قرارات حاسمة تحت ضغط إعلامي شديد ومراقبة عامة"],
+#                     "contexts": ["حالة أزمة حيث يتم التشكيك في سمعتك المهنية ومهاجمتها علناً", "فترة طويلة من عدم اليقين حول أمان وظيفتك وآفاقك المستقبلية", "بيئة سامة مع انتقادات مستمرة وغياب تام للاعتراف أو الدعم"],
+#                     "challenges": ["ضغط نفسي شديد مع هجمات شخصية متكررة على كفاءتك وشخصيتك", "تراكم عدة إخفاقات متتالية تشكك جذرياً في قدراتك"],
+#                     "options": [("توقع وإعداد خطط طوارئ مفصلة لجميع السيناريوهات المحتملة", "التفاعل برشاقة مع الأحداث كما تتكشف دون إفراط في التخطيط"), ("إبقاء مشاعرك تحت السيطرة الكاملة في جميع الظروف", "التعبير عن مشاعرك بصدق مع الحفاظ على المعايير المهنية")]
+#                 }
+#             }
+#         },
+#         "disc": {
+#             "dominant": {
+#                 "fr": {
+#                     "actions": ["prendre des décisions stratégiques cruciales dans un contexte d'incertitude totale", "diriger une équipe résistante vers des objectifs ambitieux et controversés", "imposer des changements nécessaires malgré une opposition organisée"],
+#                     "contexts": ["une situation de crise nécessitant des décisions rapides avec des informations incomplètes", "un projet de transformation majeure avec des résistances à tous les niveaux", "une compétition acharnée où la moindre hésitation peut être fatale"],
+#                     "challenges": ["une opposition directe et coordonnée de la part d'acteurs influents", "des ressources insuffisantes pour atteindre des objectifs très ambitieux"],
+#                     "options": [("déléguer la responsabilité tout en gardant le contrôle final", "superviser directement chaque étape pour garantir l'exécution"), ("agir immédiatement sur la base de votre intuition", "analyser en profondeur toutes les options avant de décider")]
+#                 },
+#                 "en": {
+#                     "actions": ["make crucial strategic decisions in complete uncertainty with high stakes", "lead a resistant team toward ambitious and controversial objectives", "impose necessary changes despite organized opposition from stakeholders"],
+#                     "contexts": ["a crisis situation requiring rapid decisions with incomplete information and time pressure", "a major transformation project with resistance at all organizational levels", "intense competition where any hesitation could be fatal to success"],
+#                     "challenges": ["direct and coordinated opposition from influential actors with their own agendas", "insufficient resources to achieve highly ambitious objectives within tight constraints"],
+#                     "options": [("delegate responsibility while maintaining ultimate control over outcomes", "directly supervise each step to guarantee proper execution"), ("act immediately based on your intuition and experience", "thoroughly analyze all options before making any decisions")]
+#                 },
+#                 "ar": {
+#                     "actions": ["اتخاذ قرارات استراتيجية حاسمة في عدم يقين كامل مع مخاطر عالية", "قيادة فريق مقاوم نحو أهداف طموحة ومثيرة للجدل", "فرض تغييرات ضرورية رغم معارضة منظمة من أصحاب المصلحة"],
+#                     "contexts": ["حالة أزمة تتطلب قرارات سريعة بمعلومات ناقصة وضغط زمني", "مشروع تحويل كبير مع مقاومة على جميع المستويات التنظيمية", "منافسة شديدة حيث يمكن أن يكون أي تردد قاتلاً للنجاح"],
+#                     "challenges": ["معارضة مباشرة ومنسقة من فاعلين مؤثرين لديهم أجنداتهم الخاصة", "موارد غير كافية لتحقيق أهداف طموحة جداً ضمن قيود ضيقة"],
+#                     "options": [("تفويض المسؤولية مع الحفاظ على السيطرة النهائية على النتائج", "الإشراف المباشر على كل خطوة لضمان التنفيذ السليم"), ("التصرف فوراً بناءً على حدسك وخبرتك", "تحليل جميع الخيارات بدقة قبل اتخاذ أي قرارات")]
+#                 }
+#             },
+#             "influent": {
+#                 "fr": {
+#                     "actions": ["convaincre un groupe sceptique avec des intérêts divergents", "inspirer une équipe démotivée après des échecs répétés", "présenter une idée révolutionnaire à des décideurs conservateurs"],
+#                     "contexts": ["une audience hostile avec des préjugés établis contre votre proposition", "une réunion de crise où la panique et le pessimisme dominent", "une négociation complexe avec des parties prenantes influentes"],
+#                     "challenges": ["un manque d'attention généralisé et une distraction constante", "une résistance culturelle profonde au changement organisationnel"],
+#                     "options": [("utiliser l'émotion et les histoires personnelles pour toucher", "s'appuyer exclusivement sur des données factuelles et des preuves"), ("motiver par l'enthousiasme et la vision inspirante", "structurer méticuleusement l'argumentation logique")]
+#                 },
+#                 "en": {
+#                     "actions": ["convince a skeptical group with divergent interests and competing priorities", "inspire a demotivated team after repeated failures and setbacks", "present a revolutionary idea to conservative decision-makers with established mindsets"],
+#                     "contexts": ["a hostile audience with established prejudices against your proposal", "a crisis meeting where panic and pessimism dominate the atmosphere", "a complex negotiation with influential stakeholders and competing agendas"],
+#                     "challenges": ["widespread lack of attention and constant distractions from competing priorities", "deep cultural resistance to organizational change and new methodologies"],
+#                     "options": [("use emotion and personal stories to connect and touch hearts", "rely exclusively on factual data and concrete evidence"), ("motivate through enthusiasm and inspiring vision of the future", "meticulously structure logical argumentation and reasoning")]
+#                 },
+#                 "ar": {
+#                     "actions": ["إقناع مجموعة متشككة ذات مصالح متباينة وأولويات متنافسة", "إلهام فريق محبط بعد إخفاقات ونكسات متكررة", "تقديم فكرة ثورية لصناع قرار محافظين بعقليات راسخة"],
+#                     "contexts": ["جمهور عدائي مع تحيزات راسخة ضد اقتراحك", "اجتماع أزمة حيث يهيمن الذعر والتشاؤم على الأجواء", "مفاوضة معقدة مع أصحاب مصلحة مؤثرين وأجندات متنافسة"],
+#                     "challenges": ["نقص واسع في الانتباه وتشتيت مستمر من أولويات متنافسة", "مقاومة ثقافية عميقة للتغيير التنظيمي والمنهجيات الجديدة"],
+#                     "options": [("استخدام العاطفة والقصص الشخصية للتواصل ولمس القلوب", "الاعتماد حصرياً على البيانات الواقعية والأدلة الملموسة"), ("التحفيز من خلال الحماس والرؤية الملهمة للمستقبل", "هيكلة الحجة المنطقية والتفكير بدقة")]
+#                 }
+#             },
+#             "stable": {
+#                 "fr": {
+#                     "actions": ["maintenir la cohésion dans une équipe fragmentée par des conflits internes", "soutenir des collègues pendant une restructuration majeure avec licenciements", "gérer un changement organisationnel tout en préservant la culture d'entreprise"],
+#                     "contexts": ["une équipe multiculturelle avec des tensions ethniques et générérationnelles", "une période de transition prolongée avec une incertitude sur l'avenir", "un environnement de travail tendu avec une pression constante sur les résultats"],
+#                     "challenges": ["un conflit ouvert entre différentes factions avec des loyautés divisées", "une instabilité organisationnelle chronique affectant le moral des équipes"],
+#                     "options": [("préserver absolument la stabilité existante même si elle freine l'innovation", "adopter progressivement l'innovation tout en maintenant les bases solides"), ("agir systématiquement en médiateur neutre dans tous les conflits", "prendre des positions claires quand les valeurs fondamentales sont en jeu")]
+#                 },
+#                 "en": {
+#                     "actions": ["maintain cohesion in a team fragmented by internal conflicts and personal disputes", "support colleagues during major restructuring with layoffs and uncertainty", "manage organizational change while preserving essential company culture and values"],
+#                     "contexts": ["a multicultural team with ethnic and generational tensions affecting collaboration", "a prolonged transition period with persistent uncertainty about the future", "a tense work environment with constant pressure on results and performance"],
+#                     "challenges": ["open conflict between different factions with divided loyalties and competing interests", "chronic organizational instability severely affecting team morale and productivity"],
+#                     "options": [("absolutely preserve existing stability even if it hinders innovation and growth", "gradually adopt innovation while maintaining solid foundational structures"), ("systematically act as neutral mediator in all conflicts and disputes", "take clear positions when fundamental values and principles are at stake")]
+#                 },
+#                 "ar": {
+#                     "actions": ["الحفاظ على التماسك في فريق مجزأ بصراعات داخلية ونزاعات شخصية", "دعم الزملاء أثناء إعادة هيكلة كبيرة مع تسريحات وعدم يقين", "إدارة التغيير التنظيمي مع الحفاظ على ثقافة الشركة الأساسية والقيم"],
+#                     "contexts": ["فريق متعدد الثقافات مع توترات عرقية وجيلية تؤثر على التعاون", "فترة انتقالية طويلة مع عدم يقين مستمر حول المستقبل", "بيئة عمل متوترة مع ضغط مستمر على النتائج والأداء"],
+#                     "challenges": ["صراع مفتوح بين فصائل مختلفة مع ولاءات مقسمة ومصالح متنافسة", "عدم استقرار تنظيمي مزمن يؤثر بشدة على معنويات الفريق والإنتاجية"],
+#                     "options": [("الحفاظ المطلق على الاستقرار الموجود حتى لو أعاق الابتكار والنمو", "تبني الابتكار تدريجياً مع الحفاظ على الهياكل الأساسية الصلبة"), ("العمل بشكل منهجي كوسيط محايد في جميع الصراعات والنزاعات", "اتخاذ مواقف واضحة عندما تكون القيم والمبادئ الأساسية على المحك")]
+#                 }
+#             },
+#             "conforme": {
+#                 "fr": {
+#                     "actions": ["analyser une situation complexe avec des données contradictoires et incomplètes", "assurer la conformité réglementaire dans un environnement en évolution constante", "optimiser un processus critique avec des contraintes de qualité strictes"],
+#                     "contexts": ["une décision stratégique majeure avec des implications légales importantes", "un cadre réglementé avec des audits fréquents et des sanctions potentielles", "un projet détaillé nécessitant une précision absolue et zéro défaut"],
+#                     "challenges": ["une ambiguïté persistante dans les règles et réglementations", "une pression constante pour accélérer au détriment de la rigueur"],
+#                     "options": [("suivre rigoureusement les normes établies même si elles ralentissent", "prendre des initiatives calculées pour améliorer l'efficacité"), ("prioriser systématiquement la précision absolue dans tous les détails", "favoriser la flexibilité opérationnelle selon les contraintes du moment")]
+#                 },
+#                 "en": {
+#                     "actions": ["analyze a complex situation with contradictory and incomplete data requiring thorough investigation", "ensure regulatory compliance in a constantly evolving environment with changing standards", "optimize a critical process with strict quality constraints and zero-tolerance for errors"],
+#                     "contexts": ["a major strategic decision with significant legal implications and compliance requirements", "a highly regulated framework with frequent audits and potential severe sanctions", "a detailed project requiring absolute precision and zero defects in execution"],
+#                     "challenges": ["persistent ambiguity in rules and regulations creating uncertainty in decision-making", "constant pressure to accelerate processes at the expense of thoroughness and rigor"],
+#                     "options": [("rigorously follow established standards even if they significantly slow progress", "take calculated initiatives to improve efficiency while maintaining compliance"), ("systematically prioritize absolute precision in every detail and aspect", "favor operational flexibility according to situational constraints and demands")]
+#                 },
+#                 "ar": {
+#                     "actions": ["تحليل موقف معقد مع بيانات متناقضة وناقصة تتطلب تحقيقاً شاملاً", "ضمان الامتثال التنظيمي في بيئة متطورة باستمرار مع معايير متغيرة", "تحسين عملية حرجة مع قيود جودة صارمة وعدم تسامح مع الأخطاء"],
+#                     "contexts": ["قرار استراتيجي كبير مع آثار قانونية مهمة ومتطلبات امتثال", "إطار شديد التنظيم مع تدقيقات متكررة وعقوبات محتملة شديدة", "مشروع مفصل يتطلب دقة مطلقة وصفر عيوب في التنفيذ"],
+#                     "challenges": ["غموض مستمر في القوانين واللوائح يخلق عدم يقين في اتخاذ القرار", "ضغط مستمر لتسريع العمليات على حساب الشمولية والصرامة"],
+#                     "options": [("اتباع المعايير المعتمدة بصرامة حتى لو أبطأت التقدم بشكل كبير", "اتخاذ مبادرات محسوبة لتحسين الكفاءة مع الحفاظ على الامتثال"), ("إعطاء الأولوية بشكل منهجي للدقة المطلقة في كل تفصيل وجانب", "تفضيل المرونة التشغيلية وفقاً للقيود والمطالب الظرفية")]
+#                 }
+#             }
+#         },
+#         "bien_etre": {
+#             "fr": {
+#                 "actions": ["équilibrer travail et vie personnelle lors d'une période de surcharge professionnelle", "maintenir votre motivation malgré un manque de reconnaissance persistant", "gérer votre énergie pendant des projets marathons avec des délais impossibles"],
+#                 "contexts": ["une période de forte charge avec des heures supplémentaires obligatoires", "une équipe sous pression constante avec un management dysfonctionnel", "un projet long et stressant sans perspectives d'amélioration à court terme"],
+#                 "challenges": ["un épuisement professionnel imminent avec des signes de burnout", "un manque total de reconnaissance malgré des efforts exceptionnels"],
+#                 "options": [("prioriser absolument le repos même si cela affecte les résultats", "maintenir la productivité malgré la fatigue croissante"), ("exprimer clairement vos besoins et limites à la hiérarchie", "vous adapter silencieusement aux attentes sans protester")]
+#             },
+#             "en": {
+#                 "actions": ["balance work and personal life during a period of professional overload and excessive demands", "maintain motivation despite persistent lack of recognition and appreciation from management", "manage your energy during marathon projects with impossible deadlines and unrealistic expectations"],
+#                 "contexts": ["a period of heavy workload with mandatory overtime and weekend work", "a team under constant pressure with dysfunctional management and toxic leadership", "a long and stressful project with no prospects for improvement in the near future"],
+#                 "challenges": ["imminent professional burnout with clear warning signs and symptoms", "complete lack of recognition despite exceptional efforts and outstanding contributions"],
+#                 "options": [("absolutely prioritize rest even if it negatively affects results and performance", "maintain productivity despite growing fatigue and declining mental health"), ("clearly express your needs and limits to hierarchy and management", "silently adapt to expectations without protest or resistance")]
+#             },
+#             "ar": {
+#                 "actions": ["توازن العمل والحياة الشخصية خلال فترة حمولة مهنية زائدة ومطالب مفرطة", "الحفاظ على الدافعية رغم النقص المستمر في الاعتراف والتقدير من الإدارة", "إدارة طاقتك خلال مشاريع ماراثونية مع مواعيد نهائية مستحيلة وتوقعات غير واقعية"],
+#                 "contexts": ["فترة عبء عمل ثقيل مع ساعات إضافية إجبارية وعمل نهاية الأسبوع", "فريق تحت ضغط مستمر مع إدارة مختلة وقيادة سامة", "مشروع طويل ومجهد دون آفاق للتحسن في المستقبل القريب"],
+#                 "challenges": ["إرهاق مهني وشيك مع علامات تحذيرية وأعراض واضحة", "غياب كامل للاعتراف رغم الجهود الاستثنائية والمساهمات المتميزة"],
+#                 "options": [("إعطاء الأولوية المطلقة للراحة حتى لو أثر سلباً على النتائج والأداء", "الحفاظ على الإنتاجية رغم التعب المتزايد وتدهور الصحة النفسية"), ("التعبير بوضوح عن احتياجاتك وحدودك للتسلسل الهرمي والإدارة", "التكيف بصمت مع التوقعات دون احتجاج أو مقاومة")]
+#             }
+#         },
+#         "resilience_ie": {
+#             "fr": {
+#                 "actions": ["gérer une situation de stress extrême qui dépasse vos capacités habituelles", "adapter votre approche lors d'échecs répétés dans des domaines critiques", "comprendre et gérer les émotions complexes de votre équipe en crise"],
+#                 "contexts": ["une crise personnelle et professionnelle simultanée affectant tous les aspects de votre vie", "un conflit interpersonnel majeur avec des conséquences sur votre carrière", "une décision cruciale avec des implications émotionnelles lourdes pour votre entourage"],
+#                 "challenges": ["une surcharge émotionnelle massive dépassant vos mécanismes de défense", "une incertitude prolongée sur l'avenir créant anxiété et stress chronique"],
+#                 "options": [("contrôler rigoureusement vos émotions en toutes circonstances", "les exprimer authentiquement tout en restant constructif"), ("anticiper méthodiquement tous les obstacles potentiels", "réagir spontanément aux défis au moment où ils surviennent")]
+#             },
+#             "en": {
+#                 "actions": ["manage an extreme stress situation that exceeds your usual coping capacities", "adapt your approach following repeated failures in critical areas of responsibility", "understand and manage complex emotions of your team during organizational crisis"],
+#                 "contexts": ["a simultaneous personal and professional crisis affecting all aspects of your life", "a major interpersonal conflict with significant consequences for your career trajectory", "a crucial decision with heavy emotional implications for your family and colleagues"],
+#                 "challenges": ["massive emotional overload exceeding your normal defense mechanisms and coping strategies", "prolonged uncertainty about the future creating chronic anxiety and persistent stress"],
+#                 "options": [("rigorously control your emotions in all circumstances and situations", "authentically express them while remaining constructive and solution-focused"), ("methodically anticipate all potential obstacles and prepare contingencies", "spontaneously react to challenges as they arise in real-time")]
+#             },
+#             "ar": {
+#                 "actions": ["إدارة موقف ضغط شديد يتجاوز قدراتك المعتادة على التأقلم", "تكييف نهجك بعد إخفاقات متكررة في مجالات مسؤولية حرجة", "فهم وإدارة المشاعر المعقدة لفريقك أثناء أزمة تنظيمية"],
+#                 "contexts": ["أزمة شخصية ومهنية متزامنة تؤثر على جميع جوانب حياتك", "صراع شخصي كبير مع عواقب مهمة على مسار مسيرتك المهنية", "قرار حاسم مع آثار عاطفية ثقيلة على عائلتك وزملائك"],
+#                 "challenges": ["حمولة عاطفية هائلة تتجاوز آليات دفاعك العادية واستراتيجيات التأقلم", "عدم يقين طويل حول المستقبل يخلق قلقاً مزمناً وضغطاً مستمراً"],
+#                 "options": [("السيطرة بصرامة على مشاعرك في جميع الظروف والمواقف", "التعبير عنها بصدق مع البقاء بناءً ومركزاً على الحلول"), ("توقع منهجي لجميع العقبات المحتملة وإعداد خطط طوارئ", "التفاعل بعفوية مع التحديات كما تنشأ في الوقت الفعلي")]
+#             }
+#         }
+#     }
    
-    # Select template based on previous score
-    score_category = "default"
-    if previous_score is not None:
-        if previous_score <= 2:
-            score_category = "low_score"
-        elif previous_score == 3:
-            score_category = "medium_score"
-        elif previous_score >= 4:
-            score_category = "high_score"
+#     # Select template based on previous score
+#     score_category = "default"
+#     if previous_score is not None:
+#         if previous_score <= 2:
+#             score_category = "low_score"
+#         elif previous_score == 3:
+#             score_category = "medium_score"
+#         elif previous_score >= 4:
+#             score_category = "high_score"
 
-    templates = question_templates.get(score_category, question_templates["default"]).get(language, question_templates["default"].get(language, question_templates["default"]["fr"]))
+#     templates = question_templates.get(score_category, question_templates["default"]).get(language, question_templates["default"].get(language, question_templates["default"]["fr"]))
     
-    # Get language-specific contexts
-    trait_data = trait_contexts.get(assessment_type, {}).get(trait, {})
-    if isinstance(trait_data, dict) and language in trait_data:
-        contexts = trait_data[language]
-    else:
-        # Fallback to appropriate language defaults instead of French
-        if language == "en":
-            contexts = {
-                "actions": ["managing situations", "handling challenges", "making decisions"],
-                "contexts": ["a professional context", "your workplace", "team environment"],
-                "challenges": ["an unexpected challenge", "time pressure", "conflicting priorities"],
-                "options": [("act quickly", "think thoroughly"), ("take initiative", "wait for guidance")]
-            }
-        elif language == "ar":
-            contexts = {
-                "actions": ["إدارة موقف", "التعامل مع التحديات", "اتخاذ قرارات"],
-                "contexts": ["سياق مهني", "مكان عملك", "بيئة الفريق"],
-                "challenges": ["تحدي غير متوقع", "ضغط الوقت", "أولويات متضاربة"],
-                "options": [("التصرف بسرعة", "التفكير بعمق"), ("أخذ المبادرة", "انتظار التوجيه")]
-            }
-        else:
-            contexts = trait_data.get("fr", {
-                "actions": ["gérer une situation", "relever des défis", "prendre des décisions"],
-                "contexts": ["un contexte professionnel", "votre lieu de travail", "environnement d'équipe"],
-                "challenges": ["un défi inattendu", "pression temporelle", "priorités conflictuelles"],
-                "options": [("agir rapidement", "réfléchir en profondeur"), ("prendre l'initiative", "attendre des directives")]
-            })
+#     # Get language-specific contexts
+#     trait_data = trait_contexts.get(assessment_type, {}).get(trait, {})
+#     if isinstance(trait_data, dict) and language in trait_data:
+#         contexts = trait_data[language]
+#     else:
+#         # Fallback to appropriate language defaults instead of French
+#         if language == "en":
+#             contexts = {
+#                 "actions": ["managing situations", "handling challenges", "making decisions"],
+#                 "contexts": ["a professional context", "your workplace", "team environment"],
+#                 "challenges": ["an unexpected challenge", "time pressure", "conflicting priorities"],
+#                 "options": [("act quickly", "think thoroughly"), ("take initiative", "wait for guidance")]
+#             }
+#         elif language == "ar":
+#             contexts = {
+#                 "actions": ["إدارة موقف", "التعامل مع التحديات", "اتخاذ قرارات"],
+#                 "contexts": ["سياق مهني", "مكان عملك", "بيئة الفريق"],
+#                 "challenges": ["تحدي غير متوقع", "ضغط الوقت", "أولويات متضاربة"],
+#                 "options": [("التصرف بسرعة", "التفكير بعمق"), ("أخذ المبادرة", "انتظار التوجيه")]
+#             }
+#         else:
+#             contexts = trait_data.get("fr", {
+#                 "actions": ["gérer une situation", "relever des défis", "prendre des décisions"],
+#                 "contexts": ["un contexte professionnel", "votre lieu de travail", "environnement d'équipe"],
+#                 "challenges": ["un défi inattendu", "pression temporelle", "priorités conflictuelles"],
+#                 "options": [("agir rapidement", "réfléchir en profondeur"), ("prendre l'initiative", "attendre des directives")]
+#             })
     
-    template = random.choice(templates)
-    action = random.choice(contexts.get("actions", ["managing situations" if language == "en" else "إدارة موقف" if language == "ar" else "gérer une situation"]))
-    context = random.choice(contexts.get("contexts", ["a professional context" if language == "en" else "سياق مهني" if language == "ar" else "un contexte professionnel"]))
-    challenge = random.choice(contexts.get("challenges", ["an unexpected challenge" if language == "en" else "تحدي غير متوقع" if language == "ar" else "un défi inattendu"]))
-    option1, option2 = random.choice(contexts.get("options", [("act quickly", "think thoroughly") if language == "en" else ("التصرف بسرعة", "التفكير بعمق") if language == "ar" else ("agir rapidement", "réfléchir en profondeur")]))
+#     template = random.choice(templates)
+#     action = random.choice(contexts.get("actions", ["managing situations" if language == "en" else "إدارة موقف" if language == "ar" else "gérer une situation"]))
+#     context = random.choice(contexts.get("contexts", ["a professional context" if language == "en" else "سياق مهني" if language == "ar" else "un contexte professionnel"]))
+#     challenge = random.choice(contexts.get("challenges", ["an unexpected challenge" if language == "en" else "تحدي غير متوقع" if language == "ar" else "un défi inattendu"]))
+#     option1, option2 = random.choice(contexts.get("options", [("act quickly", "think thoroughly") if language == "en" else ("التصرف بسرعة", "التفكير بعمق") if language == "ar" else ("agir rapidement", "réfléchir en profondeur")]))
     
-    question = template.format(action=action, context=context, challenge=challenge, option1=option1, option2=option2)
+#     question = template.format(action=action, context=context, challenge=challenge, option1=option1, option2=option2)
     
-    question_lower = question.lower()
-    for topic in topics_to_avoid:
-        if topic in question_lower:
-            return get_behavioral_questions(trait, question_number, previous_answers, previous_score, language, assessment_type)
+#     question_lower = question.lower()
+#     for topic in topics_to_avoid:
+#         if topic in question_lower:
+#             return get_behavioral_questions(trait, question_number, previous_answers, previous_score, language, assessment_type)
     
-    return question
+#     return question
 
 def generate_question(trait, question_number, previous_answers, previous_score, language, assessment_type="big_five"):
     """Generate dynamic behavioral questions based on previous score and answers"""
@@ -747,16 +747,16 @@ def generate_question(trait, question_number, previous_answers, previous_score, 
 {context}{score_context}
 
 IMPÉRATIF - ÉVITER LA RÉPÉTITION:
-- Si des réponses précédentes existent, crée une question sur un ASPECT COMPLÈTEMENT DIFFÉRENT du trait
+- Si des réponses précédentes existent, crée une question sur un ASPECT COMPLÈTEMENT DIFFÉRENT 
 - Change TOTALEMENT le contexte, la situation, l'angle d'approche
 - Utilise des débuts de question VARIÉS et créatifs
 
 STYLE REQUIS:
 - Question situationnelle et comportementale (10-15 mots)
 - Explore ACTIONS, DÉCISIONS, PRÉFÉRENCES, STRATÉGIES dans des contextes VARIÉS
-- Débuts créatifs: "Décrivez votre méthode pour...", "Comment abordez-vous...", "Quelle stratégie utilisez-vous...", "Dans quels cas préférez-vous...", "Comment adaptez-vous..."
+- Débuts créatifs: "Comment...", "Comment abordez-vous...", "Comment réagissez-vous quand...","Que faites-vous quand...","Préférez-vous...", 
 - Contextes variés: travail, personnel, social, créatif, organisationnel, relationnel
-- ÉVITE: répétition, questions similaires, même contexte que précédemment
+- ÉVITE: répétition, questions similaires, même contexte que précédemment, mêmes mots dans la même question
 
 QUALITÉ:
 - Focus sur comportements concrets et choix réels
@@ -769,16 +769,16 @@ Réponds UNIQUEMENT avec la question comportementale en français.""",
 {context}{score_context}
 
 IMPERATIVE - AVOID REPETITION:
-- If previous answers exist, create a question about a COMPLETELY DIFFERENT aspect of the trait
+- If previous answers exist, create a question about a COMPLETELY DIFFERENT aspect 
 - TOTALLY change the context, situation, approach angle
 - Use VARIED and creative question beginnings
 
 REQUIRED STYLE:
 - Situational and behavioral question (10-15 words)
 - Explore ACTIONS, DECISIONS, PREFERENCES, STRATEGIES in VARIED contexts
-- Creative beginnings: "Describe your method for...", "How do you approach...", "What strategy do you use...", "In what cases do you prefer...", "How do you adapt..."
+- Creative beginnings: "how do you...","what do you do when ...","Do you prefer...", "How do you react when...",
 - Varied contexts: work, personal, social, creative, organizational, relational
-- AVOID: repetition, similar questions, same context as previously
+- AVOID: repetition, similar questions, same context as previously , same words in the same question
 
 QUALITY:
 - Focus on concrete behaviors and real choices
@@ -798,9 +798,9 @@ Respond ONLY with the behavioral question in English.""",
 النمط المطلوب:
 - سؤال موقفي وسلوكي (10-15 كلمة)
 - استكشف الأفعال والقرارات والتفضيلات والاستراتيجيات في سياقات متنوعة
-- بدايات إبداعية: "صف طريقتك في...", "كيف تتعامل مع...", "ما الاستراتيجية التي تستخدمها...", "في أي حالات تفضل...", "كيف تتكيف..."
-- سياقات متنوعة: العمل، الشخصي، الاجتماعي، الإبداعي، التنظيمي، العلائقي
-- تجنب: التكرار، الأسئلة المشابهة، نفس السياق السابق
+- "...بدايات إبداعية: "كيف تتصرف ...", "كيف تتعامل عندما...","هل تفضل...عندما","هل...","كيف  
+ياقات متنوعة: العمل، الشخصي، الاجتماعي، الإبداعي، التنظيمي، العلائقي
+- تجنب: التكرار، الأسئلة المشابهة، نفس السياق السابقة، نفس الكلمات في نفس السؤال
 
 الجودة:
 - التركيز على السلوكيات الملموسة والخيارات الحقيقية
@@ -812,11 +812,11 @@ Respond ONLY with the behavioral question in English.""",
 
     prompt = prompts.get(language, prompts["fr"])
 
-    if not client:
-        return validate_question_quality(
-            get_behavioral_questions(trait, question_number, previous_answers, previous_score, language, assessment_type),
-            trait, language
-        )
+    # if not client:
+    #     return validate_question_quality(
+    #         get_behavioral_questions(trait, question_number, previous_answers, previous_score, language, assessment_type),
+    #         trait, language
+    #     )
 
     try:
         response = client.chat.completions.create(
@@ -851,9 +851,9 @@ def validate_question_quality(question, trait, language):
     question_lower = question.lower()
     
     forbidden_patterns = [
-        'comment vous sentez', 'que faites-vous quand', 'comment réagissez',
-        'how do you feel', 'what do you do when', 'how do you react',
-        'كيف تشعر', 'ماذا تفعل عندما', 'كيف تتفاعل',
+        'comment vous sentez',  'comment réagissez',
+        'how do you feel',  'how do you react',
+        'كيف تشعر',  'كيف تتفاعل',
         'tell me about', 'parlez-moi de', 'حدثني عن',
         'share your experience', 'describe a time when', 'racontez une fois'
     ]
@@ -864,9 +864,9 @@ def validate_question_quality(question, trait, language):
             return get_behavioral_questions(trait, 1, [], None, language, "big_five")
     
     behavioral_patterns = {
-        "fr": ["décrivez votre", "quelle est votre", "préférez-vous", "dans quelles situations", "comment gérez-vous", "quelle approche", "quels facteurs", "pourquoi trouvez-vous", "quelles stratégies"],
-        "en": ["describe your", "what is your", "do you prefer", "in what situations", "how do you manage", "what approach", "what factors", "why do you find", "what strategies"],
-        "ar": ["صف", "ما هو", "هل تفضل", "في أي مواقف", "كيف تدير", "ما منهج", "ما العوامل", "لماذا تجد", "ما الاستراتيجيات"]
+        "fr": ["quelle est votre", "préférez-vous",  "comment gérez-vous", "comment réagissez-vous quand", "pourquoi trouvez-vous", "quelles stratégies"],
+        "en": ["what is your", "do you prefer", "what do you do when ","how do you manage", "how do you find", "what strategies", "why do you find"],
+        "ar": ["ما هو", "هل تفضل", "كيف تدير", "كيف تتصرف عندما","ماذا تفعل عندما", "كيف تجد", "ما الاستراتيجيات"]
     }
     
     patterns = behavioral_patterns.get(language, behavioral_patterns["fr"])
