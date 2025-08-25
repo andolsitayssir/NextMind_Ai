@@ -7,7 +7,7 @@ import random
 import time
 from datetime import datetime, timedelta
 
-from .utils import (
+from .quiz import (
     generate_question, 
     analyze_answer,
     get_trait_intro,
@@ -905,19 +905,6 @@ def quiz(request):
         except Exception as e:
             logger.error(f"Error generating question attempt {attempt + 1}: {e}")
     
-    # # Fallback if all attempts failed
-    # if not question_text:
-    #     question_text = get_behavioral_questions(
-    #         trait=current_trait,
-    #         question_number=question_number,
-    #         previous_answers=[r['text'] for r in previous_responses],
-    #         previous_score=previous_score,
-    #         language=user_data['language'],
-    #         assessment_type=current_assessment
-    #     )
-    #     # Track fallback question too
-    #     if not is_question_already_used(session_key, question_text):
-    #         track_used_question(session_key, question_text)
     
     # Store question start time for response time tracking
     user_data['question_start_time'] = time.time()
@@ -1285,8 +1272,15 @@ def generate_results(user_data):
         if style_responses:
             scores = [r['score'] for r in style_responses]
             avg_score = sum(scores) / len(scores)
+            # For single questions, use the score directly (1-5 scale)
+            total_score = avg_score
             
-           
+            disc_results[style] = {
+                'score': round(total_score, 1),
+                'level': get_level_from_score(total_score, language),
+                'responses': style_responses,
+                'detailed_analysis': generate_enhanced_detailed_analysis(style, [r['text'] for r in style_responses], total_score, language, 'disc')
+            }
     
     results['disc'] = disc_results
     

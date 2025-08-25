@@ -16,12 +16,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from questionnaire import views
-
+from APP import views
+from django.conf import settings
+from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.choose_language, name='choose_language'),
     path('quiz/', views.quiz, name='quiz'),
-    path('report/', views.report, name='report'),
+    
 ]
 
+if settings.DEBUG:
+    
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

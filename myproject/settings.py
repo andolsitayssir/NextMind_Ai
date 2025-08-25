@@ -4,16 +4,16 @@ Django settings for myproject project.
 
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / ".env")
 
-SECRET_KEY = 'django-insecure-ephir1vcm73(5d47k6i&ua2c2*-66w-4_w(qj+t3-=cb%_!qnj'
+SECRET_KEY = os.getenv("SECRET_KEY", "dev-insecure-please-change-this-very-long-random-string")
 
 DEBUG = True
-
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
-# Remove questionnaire from INSTALLED_APPS to avoid migration issues
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -21,7 +21,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # 'questionnaire',  # Remove this line to avoid migrations
+    'APP',
 ]
 
 MIDDLEWARE = [
@@ -39,7 +39,7 @@ ROOT_URLCONF = 'myproject.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'questionnaire' / 'templates'],  # Add explicit template path
+        'DIRS': [],  # remove non-existent questionnaire/templates
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -53,9 +53,22 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'myproject.wsgi.application'
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
-# Minimal database config - only for Django's internal use
-DATABASES = {}
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("POSTGRES_DB", "nextmind_db"),
+        "USER": os.getenv("POSTGRES_USER", "nextmind_user"),
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD", ""),
+        "HOST": os.getenv("POSTGRES_HOST", "127.0.0.1"),
+        "PORT": os.getenv("POSTGRES_PORT", "5432"),
+    }
+}
+
+MEDIA_URL = '/reports/'
+MEDIA_ROOT = BASE_DIR / 'static/reports'
+
 
 USE_I18N = False
 USE_TZ = False
@@ -78,18 +91,6 @@ STATICFILES_DIRS = [
 ]
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# Disable migrations entirely
-MIGRATION_MODULES = {
-    'questionnaire': None,
-    'admin': None,
-    'auth': None,
-    'contenttypes': None,
-    'sessions': None,
-    'messages': None,
-    'staticfiles': None,
-}
-# ...existing code...
 
 LOGGING = {
     'version': 1,
