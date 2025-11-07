@@ -1,13 +1,12 @@
 
-
-
-
-#data base migrations
+# Database migrations
 python manage.py makemigrations
-python manage.py migration
+python manage.py migrate
 python manage.py createsuperuser
 python manage.py runserver
 
+# Run management command to create participants with PDFs
+python manage.py create_participatant
 
-
-python manage.py create participant.py
+# Run the coach only 
+python manage.py runcoach

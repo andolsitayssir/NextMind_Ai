@@ -66,9 +66,11 @@ DATABASES = {
     }
 }
 
-MEDIA_URL = '/reports/'
-MEDIA_ROOT = BASE_DIR / 'static/reports'
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media/'
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
 USE_I18N = False
 USE_TZ = False

@@ -1,5 +1,6 @@
+{% load static %}
 <!DOCTYPE html>
-<html lang="{{ session.language }}">
+<html lang="{{ session.language }}" {% if session.language == 'ar' %}dir="rtl"{% endif %}>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,940 +12,1305 @@
             box-sizing: border-box;
         }
 
-        body {
-            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-            min-height: 100vh;
-            padding: 20px;
+        :root {
+            --bg-start: #b2efecc5;
+            --bg-mid: #b4e9e7;
+            --bg-end: #f6bccec4;
+            --accent-1: #667eea;
+            --accent-2: #764ba2;
+            --accent-3: #f093fb;
+            --muted: #6c7293;
         }
 
-        .report-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            max-width: 1200px;
-            width: 100%;
-            margin: 0 auto;
-            padding: 2rem;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            animation: containerAppear 0.8s ease-out;
-        }
-
-        @keyframes containerAppear {
-            from {
-                opacity: 0;
-                transform: translateY(30px) scale(0.95);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        /* Header Section */
-        .report-header {
-            text-align: center;
-            margin-bottom: 3rem;
-            padding-bottom: 2rem;
-            border-bottom: 2px solid rgba(102, 126, 234, 0.1);
-        }
-
-        .report-title {
-            font-size: 3rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 1rem;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            animation: titlePulse 2s ease-in-out infinite;
-        }
-
-        @keyframes titlePulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-        }
-
-        .report-subtitle {
-            font-size: 1.2rem;
-            color: #6c7293;
-            font-weight: 500;
-            margin-bottom: 1rem;
-        }
-
-        .report-date {
-            font-size: 0.9rem;
-            color: #8e9aaf;
-            font-style: italic;
-        }
-
-        /* Assessment Section */
-        .assessment-section {
-            margin-bottom: 3rem;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(240, 147, 251, 0.05));
-            padding: 2rem;
-            border-radius: 15px;
-            border: 1px solid rgba(102, 126, 234, 0.1);
-            animation: sectionFadeIn 0.6s ease-out forwards;
-            opacity: 0;
-        }
-
-        .assessment-section:nth-child(2) { animation-delay: 0.1s; }
-        .assessment-section:nth-child(3) { animation-delay: 0.2s; }
-        .assessment-section:nth-child(4) { animation-delay: 0.3s; }
-        .assessment-section:nth-child(5) { animation-delay: 0.4s; }
-
-        @keyframes sectionFadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .assessment-title {
-            font-size: 1.8rem;
-            font-weight: 600;
-            color: #4a4f6a;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-        }
-
-        .assessment-icon {
-            width: 28px;
-            height: 28px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border-radius: 50%;
-            display: inline-block;
-        }
-
-        /* Trait Cards */
-        .traits-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 2rem;
-            margin-top: 1.5rem;
-        }
-
-        .trait-card {
-            background: rgba(255, 255, 255, 0.9);
-            padding: 2rem;
-            border-radius: 15px;
-            border: 1px solid rgba(102, 126, 234, 0.1);
-            transition: all 0.3s ease;
-            position: relative;
+        html, body {
+            height: 100%;
             overflow: hidden;
+            font-family: {% if session.language == 'ar' %}'Cairo', {% endif %}Inter, "Segoe UI", Roboto, sans-serif;
         }
 
-        .trait-card::before {
-            content: '';
+        body {
+            background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+            color: #0f1724;
+            line-height: 1.8;
+        }
+
+        #content-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+        }
+
+        /* Section container */
+        .section-wrapper {
             position: absolute;
             top: 0;
             left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            opacity: 0;
+            transform: scale(0.95);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+            pointer-events: none;
         }
 
-        .trait-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.2);
-            border-color: rgba(102, 126, 234, 0.3);
+        .section-wrapper.active {
+            opacity: 1;
+            transform: scale(1);
+            z-index: 2;
+            pointer-events: auto;
         }
 
-        .trait-name {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: #2d3748;
-            margin-bottom: 1rem;
-            text-align: center;
+        /* Grid layout */
+        .trait-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 20px;
+            align-items: center;
+            max-width: 70vw;
+            width: 80%;
+            height: 70vh;
+            background: white;
+            padding: 1%;
+            border-radius: 18px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Image column */
+        .trait-image-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .trait-image {
+            width: 100%;
+            max-width: 500px;
+        
+            height: auto;
+            object-fit: contain;
+            border-radius: 12px;
+        }
+
+        /* Content column */
+        .trait-content {
+            
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            height: 100%;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+
+
+        .assessment-badge {
+            font-size: 2rem;
+            color: var(--muted);
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+
+        }
+
+        .trait-title {
+            font-size: 1.5rem;
+            color: #346f99;
+            margin: 0;
+            line-height: 1.2;
+       
+
         }
 
         .trait-score {
-            text-align: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .score-number {
-            font-size: 2.5rem;
+            font-size: 1.5rem;
             font-weight: 700;
-            color: #667eea;
-            display: block;
-            margin-bottom: 0.8rem;
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-family: 'Courier New', monospace;
         }
 
-        .score-bar {
-            width: 100%;
-            height: 12px;
-            background: rgba(102, 126, 234, 0.1);
-            border-radius: 6px;
-            overflow: hidden;
-            margin-bottom: 1rem;
+        .analysis-block {
+            margin-top: 5px;
         }
 
-        .score-fill {
-            height: 100%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border-radius: 6px;
-            transition: width 2s ease-out;
-            animation: scoreFill 2s ease-out forwards;
-        }
-
-        @keyframes scoreFill {
-            from { width: 0%; }
-        }
-
-        .trait-description {
-            color: #4a5568;
-            line-height: 1.6;
-            margin-bottom: 1rem;
-            text-align: center;
-        }
-
-        .score-explanation {
-            background: rgba(102, 126, 234, 0.05);
-            padding: 1rem;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-            margin-bottom: 1.5rem;
-        }
-
-        .score-explanation small {
-            color: #4a5568;
-            line-height: 1.5;
+        .analysis-heading {
             font-size: 0.9rem;
-        }
-
-        /* Detailed Analysis Styles */
-        .trait-detailed-analysis {
-            margin-top: 2rem;
-            padding: 1.5rem;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(240, 147, 251, 0.05));
-            border-radius: 12px;
-            border-left: 4px solid #667eea;
-        }
-
-        .analysis-section-title {
-            font-size: 1.2rem;
             font-weight: 600;
-            color: #4338ca;
-            margin-bottom: 1.5rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .analysis-subsection {
-            margin-bottom: 1.5rem;
-            padding: 1rem;
-            background: rgba(255, 255, 255, 0.7);
-            border-radius: 10px;
-            border-left: 3px solid transparent;
-            transition: all 0.3s ease;
-        }
-
-        .analysis-subsection:nth-child(2) { border-left-color: #3b82f6; } 
-        .analysis-subsection:nth-child(3) { border-left-color: #10b981; } 
-        .analysis-subsection:nth-child(4) { border-left-color: #f59e0b; } 
-        
-        .analysis-subsection:hover {
-            background: rgba(255, 255, 255, 0.9);
-            transform: translateX(3px);
-        }
-
-        .subsection-title {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 0.8rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+            color: var(--accent-2);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .analysis-text {
             font-size: 0.95rem;
-            color: #4b5563;
-            line-height: 1.6;
-            margin: 0;
+            color: #344159;
+            line-height: 1.7;
+            margin-bottom: 12px;
         }
 
         .analysis-list {
-            margin: 0;
-            padding-left: 1.2rem;
-            color: #4b5563;
-            font-size: 0.95rem;
+            list-style: none;
+            padding: 0;
+            margin: 10px 0;
         }
 
         .analysis-list li {
-            margin-bottom: 0.5rem;
-            line-height: 1.5;
-        }
-
-        /* Single trait card for bien-etre and resilience */
-        .single-trait-card {
-            background: rgba(255, 255, 255, 0.9);
-            padding: 2rem;
-            border-radius: 15px;
-            border: 1px solid rgba(102, 126, 234, 0.1);
-            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            color: #344159;
+            line-height: 1.6;
+            margin-bottom: 8px;
+            padding-left: {% if session.language == 'ar' %}0{% else %}20px{% endif %};
+            padding-right: {% if session.language == 'ar' %}20px{% else %}0{% endif %};
             position: relative;
-            overflow: hidden;
-            max-width: 500px;
-            margin: 0 auto;
         }
 
-        .single-trait-card::before {
-            content: '';
+        .analysis-list li:before {
+            content: "•";
+            color: var(--accent-2);
+            font-weight: bold;
+            font-size: 1.2em;
             position: absolute;
+            left: {% if session.language == 'ar' %}auto{% else %}0{% endif %};
+            right: {% if session.language == 'ar' %}0{% else %}auto{% endif %};
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            height: 4px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+
         }
 
-        .single-trait-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.2);
+        .brand {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
         }
 
-        /* Action Section */
-        .action-section {
-            text-align: center;
-            margin-top: 3rem;
-            padding: 2rem;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(240, 147, 251, 0.05));
-            border-radius: 15px;
-            border: 1px solid rgba(102, 126, 234, 0.1);
-        }
-
-        .retake-button {
-            display: inline-block;
-            padding: 1rem 2.5rem;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
+        .title {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2), var(--accent-3));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.3rem;
+            letter-spacing: 1px;
             text-decoration: none;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 1.1rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-        }
-
-        .retake-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
-            background: linear-gradient(135deg, #5a67d8, #6b46c1);
-        }
-
-        .action-description {
-            margin-top: 1rem;
-            color: #6c7293;
-            font-size: 0.95rem;
-            line-height: 1.5;
-        }
-
-        /* Empty State */
-        .empty-state {
             text-align: center;
-            padding: 4rem 2rem;
-            color: #6c7293;
         }
 
-        .empty-icon {
-            font-size: 4rem;
-            margin-bottom: 1rem;
+        .micro {
+            font-size: 1rem;
+            color: var(--muted);
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        /* Footer CTA - Fixed Left */
+.footer-cta {
+    position: fixed;
+    left: 30px;
+    top: 50%;
+    transform: translateY(-90%);
+    z-index: 999;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+
+
+.cta-btn {
+    
+    padding: 10px;
+    background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+    color: white;
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 200;
+    border-radius: 999px;
+    transition: all 0.3s ease;
+    letter-spacing: 1.5px;
+    box-shadow: 0 14px 36px rgba(102, 126, 234, 0.14);
+}
+
+.cta-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 18px 40px rgba(102, 126, 234, 0.3);
+}
+
+/* Navigation Buttons */
+.nav-buttons {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 999;
+    display: flex;
+    gap: 15px;
+}
+
+.nav-btn {
+    width: 50px;
+    height: 50px;
+    background: white;
+    border: 2px solid var(--accent-2);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+}
+
+.nav-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.nav-btn:hover:not(:disabled) .nav-arrow {
+    border-color: white;
+}
+
+.nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.nav-arrow {
+    width: 12px;
+    height: 12px;
+    border-left: 3px solid var(--accent-2);
+    border-bottom: 3px solid var(--accent-2);
+    transition: border-color 0.3s ease;
+}
+
+.nav-arrow.up {
+    transform: rotate(135deg);
+}
+
+.nav-arrow.down {
+    transform: rotate(-45deg);
+}
+
+@media (max-width: 480px) {
+    .nav-btn {
+        width: 40px;
+        height: 40px;
+    }
+
+    .nav-arrow {
+        width: 10px;
+        height: 10px;
+        border-width: 2px;
+    }
+}
+
+        /* Progress indicator */
+        .progress-bar {
+            position: fixed;
+            top: 30vh;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 999;
+        }
+
+        .progress-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(108, 114, 147, 0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .progress-dot:hover {
+            transform: scale(1.2);
+        }
+
+        .progress-dot.active {
+            background: var(--accent-2);
+            transform: scale(1.3);
+        }
+
+        /* Empty state */
+        .empty-state {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--muted);
+            opacity: 0;
+            transform: scale(0.95);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+            pointer-events: none;
+        }
+
+        .empty-state.active {
+            opacity: 1;
+            transform: scale(1);
+            z-index: 2;
+            pointer-events: auto;
         }
 
         .empty-title {
-            font-size: 1.5rem;
+            font-size: 2rem;
             font-weight: 600;
-            margin-bottom: 1rem;
-            color: #4a4f6a;
+            margin-bottom: 15px;
+            color: #346f99;
         }
 
         .empty-message {
             font-size: 1.1rem;
-            line-height: 1.6;
-            max-width: 500px;
-            margin: 0 auto;
+            line-height: 1.8;
+            max-width: 600px;
+            margin: 0 auto 30px;
         }
 
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .report-container {
-                padding: 1.5rem;
-                margin: 10px;
-            }
-
-            .report-title {
-                font-size: 2rem;
-                letter-spacing: 1px;
-            }
-
-            .traits-grid {
+        /* Responsive */
+        @media (max-width: 980px) {
+            .trait-grid {
                 grid-template-columns: 1fr;
-                gap: 1.5rem;
+                padding: 40px 30px;
+                gap: 30px;
             }
 
-            .trait-card, .single-trait-card {
-                padding: 1.5rem;
+            .trait-title {
+                font-size: 1.8rem;
             }
 
-            .assessment-section {
-                padding: 1.5rem;
-                margin-bottom: 2rem;
-            }
-
-            .assessment-title {
-                font-size: 1.5rem;
-            }
-
-            .trait-detailed-analysis {
-                padding: 1.2rem;
-                margin-top: 1.5rem;
-            }
-
-            .analysis-subsection {
-                padding: 0.8rem;
-                margin-bottom: 1rem;
-            }
-
-            .subsection-title {
-                font-size: 0.95rem;
-            }
-
-            .analysis-text, .analysis-list {
-                font-size: 0.9rem;
+            .progress-bar {
+                display: none;
             }
         }
 
         @media (max-width: 480px) {
-            .report-container {
-                padding: 1rem;
-                border-radius: 15px;
+            .trait-grid {
+                padding: 30px 20px;
             }
 
-            .report-title {
-                font-size: 1.8rem;
-            }
-
-            .score-number {
-                font-size: 2rem;
-            }
-
-            .trait-name {
-                font-size: 1.1rem;
-            }
-
-            .retake-button {
-                padding: 0.8rem 2rem;
-                font-size: 1rem;
+            .trait-title {
+                font-size: 1.5rem;
             }
         }
 
-        /* Print Styles */
-        @media print {
-            body {
-                background: white;
-                padding: 0;
-            }
+        /* Chatbot Coach Button */
+.coach-bot {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    animation: botFloat 3s ease-in-out infinite;
+    text-decoration: none;
+}
 
-            .report-container {
-                background: white;
-                box-shadow: none;
-                border: none;
-                max-width: none;
-                padding: 1rem;
-            }
+@keyframes botFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
 
-            .action-section {
-                display: none;
-            }
+.coach-bot:hover {
+    transform: scale(1.05) translateY(-5px) !important;
+}
 
-            .trait-card, .single-trait-card {
-                break-inside: avoid;
-                page-break-inside: avoid;
-            }
+.coach-message {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 249, 255, 0.95));
+    backdrop-filter: blur(10px);
+    padding: 8px 16px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+    border: 2px solid rgba(102, 126, 234, 0.2);
+    opacity: 0;
+    transform: translateY(10px);
+    animation: messageSlide 0.5s ease forwards 0.5s;
+}
 
-            .assessment-section {
-                break-inside: avoid;
-                page-break-inside: avoid;
-            }
-        }
+@keyframes messageSlide {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.coach-message p {
+    margin: 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent-2);
+    line-height: 1.2;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.coach-avatar {
+    position: relative;
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    border: 3px solid white;
+}
+
+.coach-avatar::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--accent-3), var(--accent-1));
+    border-radius: 50%;
+    opacity: 0;
+    animation: avatarPulse 2s ease-in-out infinite;
+}
+
+@keyframes avatarPulse {
+    0%, 100% { transform: scale(1); opacity: 0; }
+    50% { transform: scale(1.2); opacity: 0.3; }
+}
+
+.coach-avatar-emoji {
+    font-size: 35px;
+    position: relative;
+    z-index: 1;
+}
+
+.coach-status {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 16px;
+    height: 16px;
+    background: #4ade80;
+    border-radius: 50%;
+    border: 3px solid white;
+    z-index: 2;
+    animation: statusBlink 2s ease-in-out infinite;
+}
+
+@keyframes statusBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Coach Info Panel - Slides from right on hover */
+.coach-info-panel {
+    position: fixed;
+    right: -350px;
+    bottom: 120px;
+    width: 320px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 249, 255, 0.98));
+    backdrop-filter: blur(15px);
+    border-radius: 18px;
+    padding: 25px;
+    box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+    border: 2px solid rgba(102, 126, 234, 0.2);
+    z-index: 999;
+    transition: right 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    pointer-events: none;
+}
+
+.coach-bot:hover + .coach-info-panel,
+.coach-info-panel:hover {
+    right: 120px;
+    pointer-events: auto;
+}
+
+.coach-info-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid rgba(102, 126, 234, 0.1);
+}
+
+.coach-info-icon {
+    width: 45px;
+    height: 45px;
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.coach-info-title {
+    flex: 1;
+}
+
+.coach-info-title h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 700;
+}
+
+.coach-info-subtitle {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-weight: 500;
+}
+
+.coach-info-description {
+    font-size: 0.85rem;
+    color: #344159;
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+.coach-info-strengths {
+    margin-top: 15px;
+}
+
+.coach-info-strengths h4 {
+    font-size: 0.85rem;
+    color: var(--accent-2);
+    margin-bottom: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.coach-strengths-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.coach-strengths-list li {
+    font-size: 0.8rem;
+    color: #344159;
+    line-height: 1.5;
+    margin-bottom: 8px;
+    padding-left: 20px;
+    position: relative;
+}
+
+.coach-strengths-list li:before {
+    content: "✓";
+    color: #4ade80;
+    font-weight: bold;
+    font-size: 1em;
+    position: absolute;
+    left: 0;
+}
+
+.coach-info-cta {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 2px solid rgba(102, 126, 234, 0.1);
+}
+
+.coach-info-btn {
+    display: block;
+    width: 100%;
+    padding: 10px 20px;
+    background: linear-gradient(90deg, var(--accent-1), var(--accent-2));
+    color: white;
+    text-decoration: none;
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: 999px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.coach-info-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .footer-cta {
+        left: 15px;
+    }
+    
+    .cta-btn {
+        padding: 25px 14px;
+        font-size: 0.85rem;
+    }
+    
+    .coach-bot {
+        bottom: 20px;
+        right: 20px;
+    }
+    
+    .coach-avatar {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .coach-avatar-emoji {
+        font-size: 30px;
+    }
+}
+
+@media (max-width: 480px) {
+    .footer-cta {
+        left: 10px;
+    }
+    
+    .cta-btn {
+        padding: 20px 12px;
+        font-size: 0.75rem;
+    }
+    
+    .coach-info-panel {
+        width: calc(100vw - 20px);
+        max-width: 280px;
+    }
+}
     </style>
 </head>
 <body>
-    <div class="report-container">
-        <!-- Header Section -->
-        <div class="report-header">
-            <h1 class="report-title">
-                {% if session.language == 'fr' %}
-                    Rapport Psychologique
-                {% elif session.language == 'en' %}
-                    Psychological Report
-                {% else %}
-                    التقرير النفسي
-                {% endif %}
-            </h1>
-            <p class="report-subtitle">
-                {% if session.language == 'fr' %}
-                    Analyse Complète de la Personnalité
-                {% elif session.language == 'en' %}
-                    Complete Personality Analysis
-                {% else %}
-                    تحليل شامل للشخصية
-                {% endif %}
-            </p>
-            <p class="report-date">
-                {% now "F j, Y" %}
-            </p>
+    <!-- Fixed Header -->
+    <header class="header">
+        <div class="brand">
+            <a href="{% url 'go_home' %}" style="text-decoration: none;">
+                <h1 class="title">NextMind</h1>
+                <div class="micro">
+                    {% if session.language == 'fr' %}RAPPORT • DÉTAILLÉ • PERSONNALISÉ
+                    {% elif session.language == 'en' %}REPORT • DETAILED • PERSONALIZED
+                    {% else %}تقرير • مفصل • شخصي{% endif %}
+                </div>
+            </a>
         </div>
+    </header>
 
+    <!-- Progress Indicator -->
+    <div class="progress-bar" id="progressBar"></div>
+
+
+    <!-- Navigation Buttons -->
+<div class="nav-buttons">
+    <button class="nav-btn" id="btnUp" aria-label="Section précédente">
+        <div class="nav-arrow up"></div>
+    </button>
+    <button class="nav-btn" id="btnDown" aria-label="Section suivante">
+        <div class="nav-arrow down"></div>
+    </button>
+</div>
+
+    <div id="content-container">
         {% if results %}
-            <!-- Big Five Section -->
+            <!-- Big Five Assessment -->
             {% if results.big_five %}
-            <div class="assessment-section">
-                <h2 class="assessment-title">
-                    <span class="assessment-icon"></span>
-                    {% if session.language == 'fr' %}
-                        Big Five - Traits de Personnalité
-                    {% elif session.language == 'en' %}
-                        Big Five - Personality Traits
-                    {% else %}
-                        العوامل الخمسة الكبرى - سمات الشخصية
-                    {% endif %}
-                </h2>
-                <div class="traits-grid">
-                    {% for trait, data in results.big_five.items %}
-                    <div class="trait-card">
-                        <div class="trait-name">
-                            {% if session.language == 'fr' %}
-                                {% if trait == 'ouverture' %}Ouverture d'Esprit
-                                {% elif trait == 'conscienciosité' %}Conscienciosité
-                                {% elif trait == 'extraversion' %}Extraversion
-                                {% elif trait == 'agréabilité' %}Agréabilité
-                                {% elif trait == 'stabilité émotionnelle' %}Stabilité Émotionnelle
-                                {% endif %}
-                            {% elif session.language == 'en' %}
-                                {% if trait == 'ouverture' %}Openness to Experience
-                                {% elif trait == 'conscienciosité' %}Conscientiousness
-                                {% elif trait == 'extraversion' %}Extraversion
-                                {% elif trait == 'agréabilité' %}Agreeableness
-                                {% elif trait == 'stabilité émotionnelle' %}Emotional Stability
-                                {% endif %}
-                            {% else %}
-                                {% if trait == 'ouverture' %}الانفتاح على التجربة
-                                {% elif trait == 'conscienciosité' %}الضمير المهني
-                                {% elif trait == 'extraversion' %}الانبساطية
-                                {% elif trait == 'agréabilité' %}المقبولية
-                                {% elif trait == 'stabilité émotionnelle' %}الاستقرار العاطفي
-                                {% endif %}
-                            {% endif %}
-                        </div>
-                        <div class="trait-score">
-                            <span class="score-number">{{ data.score }}/10</span>
-                            <div class="score-bar">
-                                <div class="score-fill" data-score="{{ data.score }}" data-max="10" style="width: {{ data.score|floatformat:0 }}0%"></div>
-                            </div>
+                {% for trait, data in results.big_five.items %}
+                <div class="section-wrapper" data-section>
+                    <div class="trait-grid">
+                        <div class="trait-image-wrapper">
+                            <img src="{% static 'images/' %}{% if trait == 'ouverture' %}opentoexperience.png
+                                        {% elif trait == 'conscienciosité' %}Conscientiousness.png
+                                        {% elif trait == 'extraversion' %}Extraversion.png
+                                        {% elif trait == 'agréabilité' %}Agreeableness.png
+                                        {% elif trait == 'stabilité émotionnelle' %}emotional.png
+                                        {% else %}home.png{% endif %}" 
+                                 alt="{{ trait }}" 
+                                 class="trait-image">
                         </div>
 
-                        
-                       
-                        {% if data.detailed_analysis %}
-                        <div class="trait-detailed-analysis">
-                            <h4 class="analysis-section-title">
-                                {% if session.language == 'fr' %}📊 Analyse Détaillée{% elif session.language == 'en' %}📊 Detailed Analysis{% else %}📊 تحليل مفصل{% endif %}
-                            </h4>
-                            
-                            <!-- Observations -->
-                            {% if data.detailed_analysis.observations %}
-                            <div class="analysis-subsection">
-                                <h5 class="subsection-title">
-                                    {% if session.language == 'fr' %}🔍 Observations{% elif session.language == 'en' %}🔍 Observations{% else %}🔍 ملاحظات{% endif %}
-                                </h5>
-                                <p class="analysis-text">{{ data.detailed_analysis.observations }}</p>
+                        <div class="trait-content">
+                            <div class="assessment-badge">
+                                {% if session.language == 'fr' %}Big Five 
+                                {% elif session.language == 'en' %}Big Five
+                                {% else %}الخمسة الكبار  {% endif %}
                             </div>
-                            {% endif %}
-                            
-                            <!-- Strengths -->
-                            {% if data.detailed_analysis.points_forts %}
-                            <div class="analysis-subsection">
-                                <h5 class="subsection-title">
-                                    {% if session.language == 'fr' %}⭐ Points Forts{% elif session.language == 'en' %}⭐ Strengths{% else %}⭐ نقاط القوة{% endif %}
-                                </h5>
-                                <ul class="analysis-list">
-                                    {% for strength in data.detailed_analysis.points_forts %}
-                                        <li>{{ strength }}</li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                            {% endif %}
-                            
-                            <!-- Development Areas -->
-                            {% if data.detailed_analysis.zones_developpement %}
-                            <div class="analysis-subsection">
-                                <h5 class="subsection-title">
-                                    {% if session.language == 'fr' %}📈 Zones de Développement{% elif session.language == 'en' %}📈 Development Areas{% else %}📈 مناطق التطوير{% endif %}
-                                </h5>
-                                <ul class="analysis-list">
-                                    {% for area in data.detailed_analysis.zones_developpement %}
-                                        <li>{{ area }}</li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                            {% endif %}
-                        </div>
-                        {% endif %}
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
 
-            <!-- DISC Section -->
-            {% if results.disc %}
-            <div class="assessment-section">
-                <h2 class="assessment-title">
-                    <span class="assessment-icon"></span>
-                    DISC - 
-                    {% if session.language == 'fr' %}
-                        Styles Comportementaux
-                    {% elif session.language == 'en' %}
-                        Behavioral Styles
-                    {% else %}
-                        الأنماط السلوكية
-                    {% endif %}
-                </h2>
-                <div class="traits-grid">
-                    {% for style, data in results.disc.items %}
-                    <div class="trait-card">
-                        <div class="trait-name">
-                            {% if session.language == 'fr' %}
-                                {% if style == 'dominant' %}Style Dominant
-                                {% elif style == 'influent' %}Style Influent
-                                {% elif style == 'stable' %}Style Stable
-                                {% elif style == 'conforme' %}Style Conforme
-                                {% endif %}
-                            {% elif session.language == 'en' %}
-                                {% if style == 'dominant' %}Dominant Style
-                                {% elif style == 'influent' %}Influential Style
-                                {% elif style == 'stable' %}Steady Style
-                                {% elif style == 'conforme' %}Compliant Style
-                                {% endif %}
-                            {% else %}
-                                {% if style == 'dominant' %}النمط المهيمن
-                                {% elif style == 'influent' %}النمط المؤثر
-                                {% elif style == 'stable' %}النمط المستقر
-                                {% elif style == 'conforme' %}النمط الملتزم
-                                {% endif %}
-                            {% endif %}
-                        </div>
-                        <div class="trait-score">
-                            <span class="score-number">{{ data.score }}/5</span>
-                            <div class="score-bar">
-                                <div class="score-fill" data-score="{{ data.score }}" data-max="5" style="width: {{ data.score|floatformat:0 }}0%"></div>
-                            </div>
-                        </div>
-                        {% if score_explanations %}
-                            {% with disc_key="disc_"|add:style %}
-                                {% for exp_key, explanation in score_explanations.items %}
-                                    {% if exp_key == disc_key %}
-                                    <div class="score-explanation">
-                                        <small>{{ explanation }}</small>
-                                    </div>
+                            <h2 class="trait-title">
+                                {% if session.language == 'fr' %}
+                                    {% if trait == 'ouverture' %}Ouverture à l'Expérience
+                                    {% elif trait == 'conscienciosité' %}Conscienciosité
+                                    {% elif trait == 'extraversion' %}Extraversion
+                                    {% elif trait == 'agréabilité' %}Agréabilité
+                                    {% elif trait == 'stabilité émotionnelle' %}Stabilité Émotionnelle
                                     {% endif %}
-                                {% endfor %}
-                            {% endwith %}
-                        {% endif %}
-                        
-                        <!-- DETAILED ANALYSIS FOR THIS DISC STYLE -->
-                        {% if data.detailed_analysis %}
-                        <div class="trait-detailed-analysis">
-                            <h4 class="analysis-section-title">
-                                {% if session.language == 'fr' %}📊 Analyse Détaillée{% elif session.language == 'en' %}📊 Detailed Analysis{% else %}📊 تحليل مفصل{% endif %}
-                            </h4>
-                            
-                            <!-- Observations -->
-                            {% if data.detailed_analysis.observations %}
-                            <div class="analysis-subsection">
-                                <h5 class="subsection-title">
-                                    {% if session.language == 'fr' %}🔍 Observations{% elif session.language == 'en' %}🔍 Observations{% else %}🔍 ملاحظات{% endif %}
-                                </h5>
-                                <p class="analysis-text">{{ data.detailed_analysis.observations }}</p>
+                                {% elif session.language == 'en' %}
+                                    {% if trait == 'ouverture' %}Openness to Experience
+                                    {% elif trait == 'conscienciosité' %}Conscientiousness
+                                    {% elif trait == 'extraversion' %}Extraversion
+                                    {% elif trait == 'agréabilité' %}Agreeableness
+                                    {% elif trait == 'stabilité émotionnelle' %}Emotional Stability
+                                    {% endif %}
+                                {% else %}
+                                    {% if trait == 'ouverture' %}الانفتاح على التجربة
+                                    {% elif trait == 'conscienciosité' %}الضمير الحي
+                                    {% elif trait == 'extraversion' %}الانبساطية
+                                    {% elif trait == 'agréabilité' %}الوداعة
+                                    {% elif trait == 'stabilité émotionnelle' %}الاستقرار العاطفي
+                                    {% endif %}
+                                {% endif %}
+                            </h2>
+
+                            <div class="trait-score">{{ data.score }}/10</div>
+
+                            {% if data.detailed_analysis %}
+                                {% if data.detailed_analysis.observations %}
+                                <div class="analysis-block">
+                                    <h4 class="analysis-heading">
+                                        {% if session.language == 'fr' %}Observations
+                                        {% elif session.language == 'en' %}Observations
+                                        {% else %}ملاحظات{% endif %}
+                                    </h4>
+                                    <p class="analysis-text">{{ data.detailed_analysis.observations }}</p>
+                                </div>
+                                {% endif %}
+
+                                {% if data.detailed_analysis.points_forts %}
+                                <div class="analysis-block">
+                                    <h4 class="analysis-heading">
+                                        {% if session.language == 'fr' %}Points Forts
+                                        {% elif session.language == 'en' %}Strengths
+                                        {% else %}نقاط القوة{% endif %}
+                                    </h4>
+                                    <ul class="analysis-list">
+                                        {% for strength in data.detailed_analysis.points_forts %}
+                                            <li>{{ strength }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+
+                                {% if data.detailed_analysis.zones_developpement %}
+                                <div class="analysis-block">
+                                    <h4 class="analysis-heading">
+                                        {% if session.language == 'fr' %}Axes de Développement
+                                        {% elif session.language == 'en' %}Development Areas
+                                        {% else %}مجالات التطوير{% endif %}
+                                    </h4>
+                                    <ul class="analysis-list">
+                                        {% for area in data.detailed_analysis.zones_developpement %}
+                                            <li>{{ area }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- DISC Assessment -->
+            {% if results.disc %}
+                {% for style, data in results.disc.items %}
+                <div class="section-wrapper" data-section>
+                    <div class="trait-grid">
+                        <div class="trait-image-wrapper">
+                            <img src="{% static 'images/' %}{% if style == 'dominant' %}dominance.png
+                                        {% elif style == 'influent' %}influence.png
+                                        {% elif style == 'stable' %}steadness.png
+                                        {% elif style == 'conforme' %}compliance.png
+                                        {% else %}home.png{% endif %}" 
+                                 alt="{{ style }}" 
+                                 class="trait-image">
+                        </div>
+
+                        <div class="trait-content">
+                            <div class="assessment-badge">
+                                {% if session.language == 'fr' %}DISC 
+                                {% elif session.language == 'en' %}DISC 
+                                {% else %}DISC  {% endif %}
+                            </div>
+
+                            <h2 class="trait-title">
+                                {% if session.language == 'fr' %}
+                                    {% if style == 'dominant' %}Dominance
+                                    {% elif style == 'influent' %}Influence
+                                    {% elif style == 'stable' %}Stabilité
+                                    {% elif style == 'conforme' %}Conformité
+                                    {% endif %}
+                                {% elif session.language == 'en' %}
+                                    {% if style == 'dominant' %}Dominance
+                                    {% elif style == 'influent' %}Influence
+                                    {% elif style == 'stable' %}Steadiness
+                                    {% elif style == 'conforme' %}Compliance
+                                    {% endif %}
+                                {% else %}
+                                    {% if style == 'dominant' %}الهيمنة
+                                    {% elif style == 'influent' %}التأثير
+                                    {% elif style == 'stable' %}الثبات
+                                    {% elif style == 'conforme' %}الامتثال
+                                    {% endif %}
+                                {% endif %}
+                            </h2>
+
+                            <div class="trait-score">{{ data.score }}/5</div>
+
+                            {% if data.detailed_analysis %}
+                                {% if data.detailed_analysis.observations %}
+                                <div class="analysis-block">
+                                    <h4 class="analysis-heading">
+                                        {% if session.language == 'fr' %}Observations
+                                        {% elif session.language == 'en' %}Observations
+                                        {% else %}ملاحظات{% endif %}
+                                    </h4>
+                                    <p class="analysis-text">{{ data.detailed_analysis.observations }}</p>
+                                </div>
+                                {% endif %}
+
+                                {% if data.detailed_analysis.points_forts %}
+                                <div class="analysis-block">
+                                    <h4 class="analysis-heading">
+                                        {% if session.language == 'fr' %}Points Forts
+                                        {% elif session.language == 'en' %}Strengths
+                                        {% else %}نقاط القوة{% endif %}
+                                    </h4>
+                                    <ul class="analysis-list">
+                                        {% for strength in data.detailed_analysis.points_forts %}
+                                            <li>{{ strength }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+
+                                {% if data.detailed_analysis.zones_developpement %}
+                                <div class="analysis-block">
+                                    <h4 class="analysis-heading">
+                                        {% if session.language == 'fr' %}Axes de Développement
+                                        {% elif session.language == 'en' %}Development Areas
+                                        {% else %}مجالات التطوير{% endif %}
+                                    </h4>
+                                    <ul class="analysis-list">
+                                        {% for area in data.detailed_analysis.zones_developpement %}
+                                            <li>{{ area }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Well-being -->
+            {% if results.bien_etre %}
+            <div class="section-wrapper" data-section>
+                <div class="trait-grid">
+                    <div class="trait-image-wrapper">
+                        <img src="{% static 'images/wellbeign.png' %}" 
+                             alt="Bien-être" 
+                             class="trait-image">
+                    </div>
+
+                    <div class="trait-content">
+                        <div class="assessment-badge">
+                            {% if session.language == 'fr' %}Bien-être 
+                            {% elif session.language == 'en' %}Well-being 
+                            {% else %}ا المهنية{% endif %}
+                        </div>
+
+                        <h2 class="trait-title">
+                            {% if session.language == 'fr' %}Bien-être Professionnel
+                            {% elif session.language == 'en' %}Professional Well-being
+                            {% else %}الرفاهية المهنية{% endif %}
+                        </h2>
+
+                        <div class="trait-score">{{ results.bien_etre.score }}/10</div>
+
+                        {% if results.bien_etre.detailed_analysis %}
+                            {% if results.bien_etre.detailed_analysis.observations %}
+                            <div class="analysis-block">
+                                <h4 class="analysis-heading">
+                                    {% if session.language == 'fr' %}Observations
+                                    {% elif session.language == 'en' %}Observations
+                                    {% else %}ملاحظات{% endif %}
+                                </h4>
+                                <p class="analysis-text">{{ results.bien_etre.detailed_analysis.observations }}</p>
                             </div>
                             {% endif %}
-                            
-                            <!-- Strengths -->
-                            {% if data.detailed_analysis.points_forts %}
-                            <div class="analysis-subsection">
-                                <h5 class="subsection-title">
-                                    {% if session.language == 'fr' %}⭐ Points Forts{% elif session.language == 'en' %}⭐ Strengths{% else %}⭐ نقاط القوة{% endif %}
-                                </h5>
+
+                            {% if results.bien_etre.detailed_analysis.points_forts %}
+                            <div class="analysis-block">
+                                <h4 class="analysis-heading">
+                                    {% if session.language == 'fr' %}Points Forts
+                                    {% elif session.language == 'en' %}Strengths
+                                    {% else %}نقاط القوة{% endif %}
+                                </h4>
                                 <ul class="analysis-list">
-                                    {% for strength in data.detailed_analysis.points_forts %}
+                                    {% for strength in results.bien_etre.detailed_analysis.points_forts %}
                                         <li>{{ strength }}</li>
                                     {% endfor %}
                                 </ul>
                             </div>
                             {% endif %}
-                            
-                            <!-- Development Areas -->
-                            {% if data.detailed_analysis.zones_developpement %}
-                            <div class="analysis-subsection">
-                                <h5 class="subsection-title">
-                                    {% if session.language == 'fr' %}📈 Zones de Développement{% elif session.language == 'en' %}📈 Development Areas{% else %}📈 مناطق التطوير{% endif %}
-                                </h5>
+
+                            {% if results.bien_etre.detailed_analysis.zones_developpement %}
+                            <div class="analysis-block">
+                                <h4 class="analysis-heading">
+                                    {% if session.language == 'fr' %}Axes de Développement
+                                    {% elif session.language == 'en' %}Development Areas
+                                    {% else %}مجالات التطوير{% endif %}
+                                </h4>
                                 <ul class="analysis-list">
-                                    {% for area in data.detailed_analysis.zones_developpement %}
+                                    {% for area in results.bien_etre.detailed_analysis.zones_developpement %}
                                         <li>{{ area }}</li>
                                     {% endfor %}
                                 </ul>
                             </div>
                             {% endif %}
-                        </div>
                         {% endif %}
                     </div>
-                    {% endfor %}
                 </div>
             </div>
             {% endif %}
 
-            <!-- Well-being Section -->
-            {% if results.bien_etre %}
-            <div class="assessment-section">
-                <h2 class="assessment-title">
-                    <span class="assessment-icon"></span>
-                    {% if session.language == 'fr' %}
-                        Bien-être au Travail
-                    {% elif session.language == 'en' %}
-                        Workplace Well-being
-                    {% else %}
-                        الرفاهة في العمل
-                    {% endif %}
-                </h2>
-                <div class="single-trait-card">
-                    <div class="trait-score">
-                        <span class="score-number">{{ results.bien_etre.score }}/10</span>
-                        <div class="score-bar">
-                            <div class="score-fill" data-score="{{ results.bien_etre.score }}" data-max="10" style="width: {{ results.bien_etre.score|floatformat:0 }}0%"></div>
-                        </div>
-                    </div>
-                    {% if score_explanations.bien_etre %}
-                    <div class="score-explanation">
-                        <small>{{ score_explanations.bien_etre }}</small>
-                    </div>
-                    {% endif %}
-                    
-                    <!-- DETAILED ANALYSIS FOR WELL-BEING -->
-                    {% if results.bien_etre.detailed_analysis %}
-                    <div class="trait-detailed-analysis">
-                        <h4 class="analysis-section-title">
-                            {% if session.language == 'fr' %}📊 Analyse Détaillée{% elif session.language == 'en' %}📊 Detailed Analysis{% else %}📊 تحليل مفصل{% endif %}
-                        </h4>
-                        
-                        {% if results.bien_etre.detailed_analysis.observations %}
-                        <div class="analysis-subsection">
-                            <h5 class="subsection-title">
-                                {% if session.language == 'fr' %}🔍 Observations{% elif session.language == 'en' %}🔍 Observations{% else %}🔍 ملاحظات{% endif %}
-                            </h5>
-                            <p class="analysis-text">{{ results.bien_etre.detailed_analysis.observations }}</p>
-                        </div>
-                        {% endif %}
-                        
-                        {% if results.bien_etre.detailed_analysis.points_forts %}
-                        <div class="analysis-subsection">
-                            <h5 class="subsection-title">
-                                {% if session.language == 'fr' %}⭐ Points Forts{% elif session.language == 'en' %}⭐ Strengths{% else %}⭐ نقاط القوة{% endif %}
-                            </h5>
-                            <ul class="analysis-list">
-                                {% for strength in results.bien_etre.detailed_analysis.points_forts %}
-                                    <li>{{ strength }}</li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                        {% endif %}
-                        
-                        {% if results.bien_etre.detailed_analysis.zones_developpement %}
-                        <div class="analysis-subsection">
-                            <h5 class="subsection-title">
-                                {% if session.language == 'fr' %}📈 Zones de Développement{% elif session.language == 'en' %}📈 Development Areas{% else %}📈 مناطق التطوير{% endif %}
-                            </h5>
-                            <ul class="analysis-list">
-                                {% for area in results.bien_etre.detailed_analysis.zones_developpement %}
-                                    <li>{{ area }}</li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                        {% endif %}
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Resilience Section -->
+            <!-- Resilience & EI -->
             {% if results.resilience_ie %}
-            <div class="assessment-section">
-                <h2 class="assessment-title">
-                    <span class="assessment-icon"></span>
-                    {% if session.language == 'fr' %}
-                        Résilience & Intelligence Émotionnelle
-                    {% elif session.language == 'en' %}
-                        Resilience & Emotional Intelligence
-                    {% else %}
-                        المرونة والذكاء العاطفي
-                    {% endif %}
-                </h2>
-                <div class="single-trait-card">
-                    <div class="trait-score">
-                        <span class="score-number">{{ results.resilience_ie.score }}/10</span>
-                        <div class="score-bar">
-                            <div class="score-fill" data-score="{{ results.resilience_ie.score }}" data-max="10" style="width: {{ results.resilience_ie.score|floatformat:0 }}0%"></div>
-                        </div>
+            <div class="section-wrapper" data-section>
+                <div class="trait-grid">
+                    <div class="trait-image-wrapper">
+                        <img src="{% static 'images/resilience.png' %}" 
+                             alt="Résilience" 
+                             class="trait-image">
                     </div>
-                    {% if score_explanations.resilience_ie %}
-                    <div class="score-explanation">
-                        <small>{{ score_explanations.resilience_ie }}</small>
+
+                    <div class="trait-content">
+                        <div class="assessment-badge">
+                            {% if session.language == 'fr' %}Résilience • Intelligence Émotionnelle
+                            {% elif session.language == 'en' %}Resilience • Emotional Intelligence
+                            {% else %}المرونة • الذكاء العاطفي{% endif %}
+                        </div>
+
+                        <h2 class="trait-title">
+                            {% if session.language == 'fr' %}Résilience & IE
+                            {% elif session.language == 'en' %}Resilience & EI
+                            {% else %}المرونة والذكاء العاطفي{% endif %}
+                        </h2>
+
+                        <div class="trait-score">{{ results.resilience_ie.score }}/10</div>
+
+                        {% if results.resilience_ie.detailed_analysis %}
+                            {% if results.resilience_ie.detailed_analysis.observations %}
+                            <div class="analysis-block">
+                                <h4 class="analysis-heading">
+                                    {% if session.language == 'fr' %}Observations
+                                    {% elif session.language == 'en' %}Observations
+                                    {% else %}ملاحظات{% endif %}
+                                </h4>
+                                <p class="analysis-text">{{ results.resilience_ie.detailed_analysis.observations }}</p>
+                            </div>
+                            {% endif %}
+
+                            {% if results.resilience_ie.detailed_analysis.points_forts %}
+                            <div class="analysis-block">
+                                <h4 class="analysis-heading">
+                                    {% if session.language == 'fr' %}Points Forts
+                                    {% elif session.language == 'en' %}Strengths
+                                    {% else %}نقاط القوة{% endif %}
+                                </h4>
+                                <ul class="analysis-list">
+                                    {% for strength in results.resilience_ie.detailed_analysis.points_forts %}
+                                        <li>{{ strength }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+
+                            {% if results.resilience_ie.detailed_analysis.zones_developpement %}
+                            <div class="analysis-block">
+                                <h4 class="analysis-heading">
+                                    {% if session.language == 'fr' %}Axes de Développement
+                                    {% elif session.language == 'en' %}Development Areas
+                                    {% else %}مجالات التطوير{% endif %}
+                                </h4>
+                                <ul class="analysis-list">
+                                    {% for area in results.resilience_ie.detailed_analysis.zones_developpement %}
+                                        <li>{{ area }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% endif %}
+                        {% endif %}
                     </div>
-                    {% endif %}
-                    
-                    <!-- DETAILED ANALYSIS FOR RESILIENCE -->
-                    {% if results.resilience_ie.detailed_analysis %}
-                    <div class="trait-detailed-analysis">
-                        <h4 class="analysis-section-title">
-                            {% if session.language == 'fr' %}📊 Analyse Détaillée{% elif session.language == 'en' %}📊 Detailed Analysis{% else %}📊 تحليل مفصل{% endif %}
-                        </h4>
-                        
-                        {% if results.resilience_ie.detailed_analysis.observations %}
-                        <div class="analysis-subsection">
-                            <h5 class="subsection-title">
-                                {% if session.language == 'fr' %}🔍 Observations{% elif session.language == 'en' %}🔍 Observations{% else %}🔍 ملاحظات{% endif %}
-                            </h5>
-                            <p class="analysis-text">{{ results.resilience_ie.detailed_analysis.observations }}</p>
-                        </div>
-                        {% endif %}
-                        
-                        {% if results.resilience_ie.detailed_analysis.points_forts %}
-                        <div class="analysis-subsection">
-                            <h5 class="subsection-title">
-                                {% if session.language == 'fr' %}⭐ Points Forts{% elif session.language == 'en' %}⭐ Strengths{% else %}⭐ نقاط القوة{% endif %}
-                            </h5>
-                            <ul class="analysis-list">
-                                {% for strength in results.resilience_ie.detailed_analysis.points_forts %}
-                                    <li>{{ strength }}</li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                        {% endif %}
-                        
-                        {% if results.resilience_ie.detailed_analysis.zones_developpement %}
-                        <div class="analysis-subsection">
-                            <h5 class="subsection-title">
-                                {% if session.language == 'fr' %}📈 Zones de Développement{% elif session.language == 'en' %}📈 Development Areas{% else %}📈 مناطق التطوير{% endif %}
-                            </h5>
-                            <ul class="analysis-list">
-                                {% for area in results.resilience_ie.detailed_analysis.zones_developpement %}
-                                    <li>{{ area }}</li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                        {% endif %}
-                    </div>
-                    {% endif %}
                 </div>
             </div>
             {% endif %}
+
+            <!-- Footer CTA -->
+            <div class="footer-cta">
+                <a href="{% url 'go_home' %}" class="cta-btn">
+                    {% if session.language == 'fr' %}NOUVELLE ÉVALUATION
+                    {% elif session.language == 'en' %}NEW ASSESSMENT
+                    {% else %}تقييم جديد{% endif %}
+                </a>
+            </div>
 
         {% else %}
             <!-- Empty State -->
-            <div class="empty-state">
-                <div class="empty-icon">📊</div>
+            <div class="empty-state active">
                 <h2 class="empty-title">
-                    {% if session.language == 'fr' %}
-                        Aucun Résultat Disponible
-                    {% elif session.language == 'en' %}
-                        No Results Available
-                    {% else %}
-                        لا توجد نتائج متاحة
-                    {% endif %}
+                    {% if session.language == 'fr' %}Aucun Résultat Disponible
+                    {% elif session.language == 'en' %}No Results Available
+                    {% else %}لا توجد نتائج متاحة{% endif %}
                 </h2>
                 <p class="empty-message">
                     {% if session.language == 'fr' %}
-                        Il semble qu'aucune évaluation n'ait été complétée. Veuillez passer l'évaluation pour voir vos résultats détaillés.
+                        Aucune évaluation n'a été complétée. Veuillez passer l'évaluation pour générer votre rapport personnalisé.
                     {% elif session.language == 'en' %}
-                        It appears no assessment has been completed. Please take the assessment to see your detailed results.
+                        No assessment has been completed. Please take the assessment to generate your personalized report.
                     {% else %}
-                        يبدو أنه لم يتم إكمال أي تقييم. يرجى إجراء التقييم لرؤية نتائجك التفصيلية.
+                        لم يتم إكمال أي تقييم. يرجى إجراء التقييم لإنشاء تقريرك الشخصي.
                     {% endif %}
                 </p>
+                <a href="{% url 'go_home' %}" class="cta-btn">
+                    {% if session.language == 'fr' %}Retour à l'accueil
+                    {% elif session.language == 'en' %}Back to Home
+                    {% else %}العودة إلى الصفحة الرئيسية{% endif %}
+                </a>
             </div>
         {% endif %}
+    </div>
 
-        <!-- Action Section -->
-        <div class="action-section">
-            <a href="{% url 'choose_language' %}" class="retake-button">
-                {% if session.language == 'fr' %}
-                    Reprendre l'Évaluation
-                {% elif session.language == 'en' %}
-                    Retake Assessment
-                {% else %}
-                    إعادة التقييم
-                {% endif %}
-            </a>
-            <p class="action-description">
-                {% if session.language == 'fr' %}
-                    Voulez-vous explorer d'autres aspects de votre personnalité ou mettre à jour vos résultats ?
-                {% elif session.language == 'en' %}
-                    Want to explore other aspects of your personality or update your results?
-                {% else %}
-                    هل تريد استكشاف جوانب أخرى من شخصيتك أو تحديث نتائجك؟
-                {% endif %}
+    <!-- JavaScript -->
+  <!-- filepath: c:\Bureau\NextMind\APP\templates\report.html -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const sections = Array.from(document.querySelectorAll('.section-wrapper'));
+        const footerCTA = document.querySelector('.footer-cta');
+        const allSlides = footerCTA ? [...sections, footerCTA] : sections;
+        const progressBar = document.getElementById('progressBar');
+        const scrollIndicator = document.getElementById('scrollIndicator');
+        const btnUp = document.getElementById('btnUp');
+        const btnDown = document.getElementById('btnDown');
+        
+        let current = 0;
+        let isScrolling = false;
+
+        // Create progress dots
+        allSlides.forEach((slide, index) => {
+            const dot = document.createElement('div');
+            dot.classList.add('progress-dot');
+            if (index === 0) dot.classList.add('active');
+            dot.addEventListener('click', () => goToSlide(index));
+            progressBar.appendChild(dot);
+        });
+
+        const dots = document.querySelectorAll('.progress-dot');
+
+        function updateButtons() {
+            btnUp.disabled = current === 0;
+            btnDown.disabled = current === allSlides.length - 1;
+        }
+
+        function showSection(index) {
+            allSlides.forEach((slide, i) => {
+                slide.classList.toggle('active', i === index);
+            });
+            
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === index);
+            });
+
+            updateButtons();
+        }
+
+        function goToSlide(index) {
+            if (index >= 0 && index < allSlides.length && !isScrolling) {
+                current = index;
+                showSection(current);
+            }
+        }
+
+        function nextSlide() {
+            if (current < allSlides.length - 1 && !isScrolling) {
+                isScrolling = true;
+                current++;
+                showSection(current);
+                setTimeout(() => { isScrolling = false; }, 800);
+            }
+        }
+
+        function prevSlide() {
+            if (current > 0 && !isScrolling) {
+                isScrolling = true;
+                current--;
+                showSection(current);
+                setTimeout(() => { isScrolling = false; }, 800);
+            }
+        }
+
+        // Show first section
+        showSection(0);
+
+        // Button clicks
+        btnUp.addEventListener('click', prevSlide);
+        btnDown.addEventListener('click', nextSlide);
+
+        // Mouse wheel navigation
+        window.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            if (isScrolling) return;
+            
+            if (e.deltaY > 0) {
+                nextSlide();
+            } else if (e.deltaY < 0) {
+                prevSlide();
+            }
+        }, { passive: false });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown' || e.key === 'PageDown') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+                e.preventDefault();
+                prevSlide();
+            }
+        });
+
+        // Scroll indicator click
+        scrollIndicator.addEventListener('click', () => {
+            nextSlide();
+        });
+
+        // Touch support for mobile
+        let touchStartY = 0;
+        document.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+        });
+
+        document.addEventListener('touchend', (e) => {
+            const touchEndY = e.changedTouches[0].clientY;
+            const diff = touchStartY - touchEndY;
+            
+            if (Math.abs(diff) > 50) {
+                if (diff > 0) {
+                    nextSlide();
+                } else {
+                    prevSlide();
+                }
+            }
+        });
+    });
+</script>
+
+<!-- NextMind Coach Bot -->
+<a href="#" class="coach-bot">
+    <div class="coach-message">
+        <p>
+            {% if session.language == 'fr' %}Découvrez CoachAI
+            {% elif session.language == 'en' %}Discover CoachAI
+            {% else %}اكتشف CoachAI{% endif %}
+        </p>
+    </div>
+    <div class="coach-avatar">
+        <div class="coach-avatar-emoji">🤖</div>
+        <div class="coach-status"></div>
+    </div>
+</a>
+
+<!-- Coach Info Panel -->
+<div class="coach-info-panel">
+    <div class="coach-info-header">
+        <div class="coach-info-icon">🧠</div>
+        <div class="coach-info-title">
+            <h3>
+                {% if session.language == 'fr' %}NextMind CoachAI
+                {% elif session.language == 'en' %}NextMind CoachAI
+                {% else %}NextMind CoachAI{% endif %}
+            </h3>
+            <p class="coach-info-subtitle">
+                {% if session.language == 'fr' %}Votre assistant IA personnel
+                {% elif session.language == 'en' %}Your personal AI assistant
+                {% else %}مساعدك الشخصي بالذكاء الاصطناعي{% endif %}
             </p>
         </div>
     </div>
 
-    <script>
-        // Animate score bars on page load
-        window.addEventListener('load', function() {
-            const scoreFills = document.querySelectorAll('.score-fill');
-            scoreFills.forEach(fill => {
-                const score = parseFloat(fill.getAttribute('data-score'));
-                const maxScore = parseFloat(fill.getAttribute('data-max'));
-                const percentage = (score / maxScore) * 100;
-                
-                setTimeout(() => {
-                    fill.style.width = percentage + '%';
-                }, 500);
-            });
-        });
+    <p class="coach-info-description">
+        {% if session.language == 'fr' %}
+            Un coach virtuel intelligent qui analyse vos résultats d'évaluation et vous accompagne dans votre développement professionnel avec des conseils personnalisés.
+        {% elif session.language == 'en' %}
+            An intelligent virtual coach that analyzes your assessment results and guides you through your professional development with personalized advice.
+        {% else %}
+            مدرب افتراضي ذكي يحلل نتائج تقييمك ويرشدك خلال تطويرك المهني بنصائح مخصصة.
+        {% endif %}
+    </p>
 
-        // Print functionality
-        function printReport() {
-            window.print();
-        }
+    <div class="coach-info-strengths">
+        <h4>
+            {% if session.language == 'fr' %}Points Forts
+            {% elif session.language == 'en' %}Key Strengths
+            {% else %}النقاط القوية{% endif %}
+        </h4>
+        <ul class="coach-strengths-list">
+            <li>
+                {% if session.language == 'fr' %}Analyse approfondie de votre profil
+                {% elif session.language == 'en' %}In-depth profile analysis
+                {% else %}تحليل عميق لملفك الشخصي{% endif %}
+            </li>
+            <li>
+                {% if session.language == 'fr' %}Conseils personnalisés 24/7
+                {% elif session.language == 'en' %}24/7 personalized guidance
+                {% else %}إرشادات مخصصة على مدار الساعة{% endif %}
+            </li>
+            <li>
+                {% if session.language == 'fr' %}Plans d'action sur mesure
+                {% elif session.language == 'en' %}Tailored action plans
+                {% else %}خطط عمل مخصصة{% endif %}
+            </li>
+            <li>
+                {% if session.language == 'fr' %}Suivi de votre progression
+                {% elif session.language == 'en' %}Progress tracking
+                {% else %}تتبع التقدم المحرز{% endif %}
+            </li>
+        </ul>
+    </div>
 
-        // Add print button if needed
-        const actionSection = document.querySelector('.action-section');
-        if (actionSection) {
-            const printButton = document.createElement('button');
-            printButton.textContent = '🖨️ Imprimer';
-            printButton.className = 'retake-button';
-            printButton.style.marginLeft = '1rem';
-            printButton.onclick = printReport;
-            actionSection.appendChild(printButton);
-        }
-    </script>
+    <div class="coach-info-cta">
+        <a href="#" class="coach-info-btn">
+            {% if session.language == 'fr' %}Commencer maintenant
+            {% elif session.language == 'en' %}Start now
+            {% else %}ابدأ الآن{% endif %}
+        </a>
+    </div>
+</div>
 </body>
 </html>

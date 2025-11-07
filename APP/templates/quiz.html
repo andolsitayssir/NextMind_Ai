@@ -350,9 +350,42 @@
                 transition-duration: 0.01ms !important;
             }
         }
+        .head{
+            position: fixed;
+            margin-top :-80vh;
+            margin-left: -70vw;
+            
+            
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.3rem;
+            letter-spacing: 1px;
+        }
+        @media screen {
+            
+        }
+        a{
+            text-decoration: none;
+        }   
     </style>
 </head>
 <body>
+    <div class="head">
+        <header>
+              <a href="{% url 'go_home' %}">  <div class="title">
+          <h1>NextMind</h1>
+          <div class="micro">
+            {% if request.session.language == 'fr' %}INSIGHT • ACTION • GROWTH{% endif %}
+            {% if request.session.language == 'en' %}PERSPECTIVE • ACTION • CROISSANCE{% endif %}
+            {% if request.session.language == 'ar' %}البصيرة • العمل • النمو{% endif %}
+
+        </div>
+      </div>
+    </a>
+        </header>
+    </div>
     <div class="quiz-container">
         <!-- Quiz Header -->
         <div class="quiz-header">
@@ -689,7 +722,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function resetButton() {
         continueBtn.disabled = false;
-        continueBtn.innerHTML = '{% if session.language == "fr" %}Continuer ✨{% elif session.language == "en" %}Continue ✨{% else %}متابعة ✨{% endif %}';
+        continueBtn.innerHTML = '{% if session.language == "fr" %}Continuer{% elif session.language == "en" %}Continue{% else %}متابعة {% endif %}';
     }
 });
     </script>
