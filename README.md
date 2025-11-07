@@ -85,30 +85,21 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Step 4: Environment Configuration
-Create a `.env` file in the root directory:
-```env
-SECRET_KEY=your-secret-key-here
-DEBUG=True
-ALLOWED_HOSTS=localhost,127.0.0.1
-DATABASE_URL=sqlite:///db.sqlite3
-LANGUAGE_CODE=fr-fr
-TIME_ZONE=UTC
-```
 
-### Step 5: Database Setup
+
+### Step 4: Database Setup
 ```bash
 python manage.py makemigrations
 python manage.py migrate
 python manage.py createsuperuser
 ```
 
-### Step 6: Collect Static Files
+### Step 7: Collect Static Files
 ```bash
 python manage.py collectstatic
 ```
 
-### Step 7: Run Development Server
+### Step 8: Run Development Server
 ```bash
 python manage.py runserver
 ```
