@@ -109,7 +109,7 @@
 
 
         .assessment-badge {
-            font-size: 2rem;
+            font-size: 1.5rem;
             color: var(--muted);
             font-weight: 700;
             letter-spacing: 1px;
@@ -118,7 +118,7 @@
         }
 
         .trait-title {
-            font-size: 1.5rem;
+            font-size: 1rem;
             color: #346f99;
             margin: 0;
             line-height: 1.2;
@@ -127,7 +127,7 @@
         }
 
         .trait-score {
-            font-size: 1.5rem;
+            font-size: 1rem;
             font-weight: 700;
             background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
             -webkit-background-clip: text;
@@ -137,14 +137,14 @@
         }
 
         .analysis-block {
-            margin-top: 5px;
+            margin-top: 2px;
         }
 
         .analysis-heading {
             font-size: 0.9rem;
             font-weight: 600;
             color: var(--accent-2);
-            margin-bottom: 8px;
+            margin-bottom: 3px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -153,22 +153,22 @@
             font-size: 0.95rem;
             color: #344159;
             line-height: 1.7;
-            margin-bottom: 12px;
+            margin-bottom: 5px;
         }
 
         .analysis-list {
             list-style: none;
             padding: 0;
-            margin: 10px 0;
+            margin: 3px 0;
         }
 
         .analysis-list li {
             font-size: 0.9rem;
             color: #344159;
             line-height: 1.6;
-            margin-bottom: 8px;
-            padding-left: {% if session.language == 'ar' %}0{% else %}20px{% endif %};
-            padding-right: {% if session.language == 'ar' %}20px{% else %}0{% endif %};
+            margin-bottom: 2px;
+            padding-left: 20px;
+            padding-right: 20px;
             position: relative;
         }
 
@@ -199,7 +199,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 8px;
+            gap: 3px;
         }
 
         .title {
@@ -208,7 +208,7 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-            margin-bottom: 0.3rem;
+            margin-bottom: 0.1rem;
             letter-spacing: 1px;
             text-decoration: none;
             text-align: center;
@@ -1074,7 +1074,7 @@
 
             <!-- Footer CTA -->
             <div class="footer-cta">
-                <a href="{% url 'go_home' %}" class="cta-btn">
+                <a href="{% url 'reset_assessment' %}" class="cta-btn">
                     {% if session.language == 'fr' %}NOUVELLE ÉVALUATION
                     {% elif session.language == 'en' %}NEW ASSESSMENT
                     {% else %}تقييم جديد{% endif %}
@@ -1098,11 +1098,28 @@
                         لم يتم إكمال أي تقييم. يرجى إجراء التقييم لإنشاء تقريرك الشخصي.
                     {% endif %}
                 </p>
-                <a href="{% url 'go_home' %}" class="cta-btn">
-                    {% if session.language == 'fr' %}Retour à l'accueil
-                    {% elif session.language == 'en' %}Back to Home
-                    {% else %}العودة إلى الصفحة الرئيسية{% endif %}
-                </a>
+                </div>a>
+            </div>
+        {% endif %}
+
+        <!-- Error State -->
+        {% if results.error %}
+            <div class="empty-state active" style="z-index: 100; background: rgba(255,200,200,0.9);">
+                <h2 class="empty-title" style="color: #c0392b;">
+                    {% if session.language == 'fr' %}Erreur de Génération
+                    {% elif session.language == 'en' %}Generation Error
+                    {% else %}خطأ في التوليد{% endif %}
+                </h2>
+                <p class="empty-message" style="color: #7f8c8d; font-family: monospace;">
+                    {{ results.error }}
+                </p>
+                <div class="footer-cta" style="position: static; margin-top: 20px; transform: none;">
+                    <a href="{% url 'report' %}?retry=true" class="cta-btn">
+                        {% if session.language == 'fr' %}RÉESSAYER
+                        {% elif session.language == 'en' %}RETRY
+                        {% else %}أعد المحاولة{% endif %}
+                    </a>
+                </div>
             </div>
         {% endif %}
     </div>

@@ -1,139 +1,45 @@
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
-from django.utils import timezone
-from django.db import transaction
-from datetime import datetime, timedelta
+from datetime import datetime
 import time
 import logging
-import re
 
-from .quiz import (
-    generate_question, 
-    analyze_answer,
-    get_trait_intro,
-    ASSESSMENT_STRUCTURE,
-    generate_enhanced_detailed_analysis,
-    generate_score_explanations,
-    should_recommend_coaching,
-    TRAITS_CONFIG,
-    DISC_CONFIG
-)
-import random
-from .fallback_content import (  # ADD THIS
-    FALLBACK_QUESTIONS,
-    fallback_score_answer,
-    fallback_generate_analysis,
-    fallback_score_explanation
-)
-# Configure minimal logging
-logging.basicConfig(level=logging.ERROR, format='%(levelname)s: %(message)s')
+# Import new adaptive system
+from .adaptive_question_generator import AdaptiveQuestionGenerator
+from .nlp_scorer import NLPScorer
+from .ai_report_generator import AIReportGenerator
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)
 
 # ============================================================================
-# VALIDATION FUNCTIONS
-# ============================================================================
-
-VALIDATION_PATTERNS = {
-    'meaningless_patterns': [
-        r'^[a-z]{1,3}$',
-        r'^[0-9]+$',
-        r'^[!@#$%^&*(),.?":{}|<>]+$',
-        r'^(.)\1{4,}$',
-        r'^(test|test123|testing|lorem|ipsum)$',
-        r'^(qwerty|asdf|hjkl|zxcv)$',
-    ],
-}
-
-BEHAVIORAL_KEYWORDS = {
-    'fr': {
-        'relevant_words': [
-            'je', 'moi', 'mon', 'ma', 'mes', 'suis', 'fais', 'pense', 'crois', 'ressens',
-            'décide', 'choisis', 'préfère', 'aime', 'situation', 'expérience', 'comportement',
-            'équipe', 'travail', 'projet', 'stress', 'émotion', 'sentiment'
-        ],
-    },
-    'en': {
-        'relevant_words': [
-            'i', 'me', 'my', 'am', 'do', 'think', 'believe', 'feel',
-            'decide', 'choose', 'prefer', 'like', 'situation', 'experience', 'behavior',
-            'team', 'work', 'project', 'stress', 'emotion', 'feeling'
-        ],
-    },
-    'ar': {
-        'relevant_words': [
-            'أنا', 'لي', 'عندي', 'أكون', 'أفعل', 'أعتقد', 'أشعر',
-            'أقرر', 'أختار', 'أفضل', 'موقف', 'تجربة', 'سلوك',
-            'فريق', 'عمل', 'مشروع', 'ضغط', 'عاطفة', 'شعور'
-        ],
-    }
-}
-
-# ============================================================================
-# SIMPLIFIED VALIDATION - For DEMO
-# ============================================================================
-
-def validate_answer(answer_text, language, current_trait=None, current_assessment=None):
-    """Simplified validation for DEMO - just check basic requirements"""
-    if not answer_text or not answer_text.strip():
-        return False, get_validation_error('empty', language)
-    
-    answer_clean = answer_text.strip()
-    
-    # Minimum length check (very permissive for demo)
-    if len(answer_clean) < 3:
-        return False, get_validation_error('too_short', language)
-    
-    # Maximum length check
-    if len(answer_text) > 2000:
-        return False, get_validation_error('too_long', language)
-    
-    # That's it! Accept almost everything for demo
-    return True, None
-
-
-def get_validation_error(error_type, language):
-    """Get localized validation error messages"""
-    errors = {
-        'empty': {
-            'fr': 'Veuillez fournir une réponse à cette question.',
-            'en': 'Please provide an answer to this question.',
-            'ar': 'يرجى تقديم إجابة على هذا السؤال.'
-        },
-        'too_short': {
-            'fr': 'Votre réponse est trop courte. Minimum 3 caractères.',
-            'en': 'Your answer is too short. Minimum 3 characters.',
-            'ar': 'إجابتك قصيرة جداً. 3 أحرف على الأقل.'
-        },
-        'too_long': {
-            'fr': 'Votre réponse est trop longue. Maximum 2000 caractères.',
-            'en': 'Your answer is too long. Maximum 2000 characters.',
-            'ar': 'إجابتك طويلة جداً. 2000 حرف كحد أقصى.'
-        }
-    }
-    
-    return errors.get(error_type, {}).get(language, errors.get(error_type, {}).get('fr', 'Réponse invalide'))
-
-# ============================================================================
-# ASSESSMENT CONFIGURATION
+# ASSESSMENT CONFIGURATION - Updated for 2 questions per trait
 # ============================================================================
 
 ASSESSMENTS = {
     'big_five': {
         'traits': ['ouverture', 'conscienciosité', 'extraversion', 'agréabilité', 'stabilité émotionnelle'],
-        'questions_per_trait': 1,
+        'questions_per_trait': 2,  # EXACTLY 2
+        'max_score_per_trait': 10,  # 2 × 5
         'order': 1
     },
     'disc': {
         'traits': ['dominant', 'influent', 'stable', 'conforme'],
-        'questions_per_trait': 1,
+        'questions_per_trait': 2,  # EXACTLY 2
+        'scoring_method': 'count_based',
         'order': 2
     },
     'bien_etre': {
-        'questions_total': 1,
+        'trait': 'general',  # Single trait
+        'questions_total': 2,  # 2 questions
+        'max_score': 10,  # 2 × 5
         'order': 3
     },
     'resilience_ie': {
-        'questions_total': 1,
+        'trait': 'general',  # Single trait
+        'questions_total': 2,  # 2 questions
+        'max_score': 10,  # 2 × 5
         'order': 4
     }
 }
@@ -148,8 +54,7 @@ TRAIT_DISPLAY_NAMES = {
     'influent': {'fr': 'Influent', 'en': 'Influent', 'ar': 'مؤثر'},
     'stable': {'fr': 'Stable', 'en': 'Stable', 'ar': 'مستقر'},
     'conforme': {'fr': 'Conforme', 'en': 'Compliant', 'ar': 'ملتزم'},
-    'bien_etre': {'fr': 'Bien-être', 'en': 'Well-being', 'ar': 'الرفاهة'},
-    'resilience_ie': {'fr': 'Résilience & IE', 'en': 'Resilience & EI', 'ar': 'المرونة والذكاء العاطفي'}
+    'general': {'fr': 'Général', 'en': 'General', 'ar': 'عام'},
 }
 
 # ============================================================================
@@ -192,20 +97,20 @@ def start_quiz(request):
         'current_question_number': 1,
         'is_completed': False,
         'responses': [],
+        'current_question': None,
         'assessment_progress': {
             'big_five': {'completed_traits': [], 'current_trait_index': 0},
             'disc': {'completed_traits': [], 'current_trait_index': 0},
             'bien_etre': {'questions_completed': 0},
             'resilience_ie': {'questions_completed': 0}
-        },
-        'results': {}
+        }
     }
     request.session.modified = True
     
     return redirect('quiz')
 
 def quiz(request):
-    """Main quiz view - DEMO VERSION with fallback scoring"""
+    """Main quiz view with 3-step adaptive workflow"""
     lang = request.session.get('language', 'fr')
     
     if 'user_data' not in request.session:
@@ -216,93 +121,115 @@ def quiz(request):
     if user_data.get('is_completed'):
         return redirect('report')
     
-    if request.method == "POST":
-        answer_text = request.POST.get('answer', '').strip()
-        
-        current_assessment = user_data['current_assessment']
-        current_trait = user_data.get('current_trait', 'general')
-        language = user_data['language']
-        question_number = user_data['current_question_number']
-        
-        # Validate answer - SIMPLIFIED
-        is_valid, error_message = validate_answer(answer_text, language, current_trait, current_assessment)
-        
-        if not is_valid:
-            return JsonResponse({
-                'error': error_message,
-                'validation_failed': True
-            }, status=400)
-        
-        # Score answer using RANDOM fallback scoring
-        try:
-            score = fallback_score_answer(
-                answer_text=answer_text,
-                trait=current_trait,
-                assessment_type=current_assessment,
-                language=language
-            )
-        except Exception as e:
-            logger.error(f"Scoring error: {e}")
-            # Emergency fallback - completely random
-            if current_assessment == 'disc':
-                score = random.uniform(2.0, 4.5)
-            else:
-                score = random.uniform(4.0, 8.0)
-        
-        # Store response
-        response_data = {
-            'assessment': current_assessment,
-            'trait': current_trait,
-            'question_number': question_number,
-            'text': answer_text,
-            'score': score,
-            'timestamp': datetime.now().isoformat(),
-            'answer_length': len(answer_text)
-        }
-        
-        user_data['responses'].append(response_data)
-        
-        # Determine next step
-        next_step = get_next_step(user_data)
-        
-        if next_step.get('completed', False):
-            user_data['is_completed'] = True
-            request.session['user_data'] = user_data
-            request.session.modified = True
-            return JsonResponse({
-                'completed': True,
-                'redirect': '/report/'
-            })
-        else:
-            user_data.update(next_step)
-            request.session['user_data'] = user_data
-            request.session.modified = True
-            return JsonResponse({'success': True})
-    
-    # GET request - generate question
     current_assessment = user_data['current_assessment']
     current_trait = user_data.get('current_trait', 'general')
     question_number = user_data['current_question_number']
     
-    # Get question from fallback
+    if request.method == "POST":
+        # User submitted answer
+        answer_text = request.POST.get('answer', '').strip()
+        
+        # Basic validation
+        if not answer_text or len(answer_text) < 3:
+            return JsonResponse({
+                'error': 'Veuillez fournir une réponse (minimum 3 caractères).',
+                'validation_failed': True
+            }, status=400)
+        
+        # STEP 2: Score answer with NLP + LLM
+        try:
+            scorer = NLPScorer()
+            score_result = scorer.score_answer(
+                question=user_data['current_question'],
+                answer=answer_text,
+                trait=current_trait,
+                assessment_type=current_assessment,
+                language=user_data['language']
+            )
+            
+            logger.info(f"Scored Q{question_number} for {current_trait}: {score_result['score']}/5")
+            
+        except Exception as e:
+            logger.error(f"Scoring error: {e}")
+            return JsonResponse({
+                'error': 'Erreur lors de l\'analyse de votre réponse. Veuillez réessayer.',
+                'validation_failed': True
+            }, status=500)
+        
+        # Store response
+        user_data['responses'].append({
+            'assessment': current_assessment,
+            'trait': current_trait,
+            'question_number': question_number,
+            'question': user_data['current_question'],
+            'answer': answer_text,
+            'score': score_result['score'],
+            'reasoning': score_result.get('reasoning', ''),
+            'timestamp': datetime.now().isoformat()
+        })
+        
+        # Determine next step
+        if question_number == 1:
+            # Just answered Q1, move to Q2
+            user_data['current_question_number'] = 2
+            request.session['user_data'] = user_data
+            request.session.modified = True
+            return JsonResponse({'success': True})
+        else:
+            # Just answered Q2, move to next trait
+            logger.info(f"📊 Before next_step: {current_assessment}/{current_trait}, progress_index={user_data['assessment_progress'].get(current_assessment, {}).get('current_trait_index', 'N/A')}")
+            next_step = get_next_step(user_data)
+            logger.info(f"📊 After next_step: {next_step}")
+            user_data.update(next_step)
+            request.session['user_data'] = user_data
+            request.session.modified = True
+            
+            if next_step.get('completed'):
+                user_data['is_completed'] = True
+                request.session['user_data'] = user_data
+                request.session.modified = True
+                return JsonResponse({'completed': True, 'redirect': '/report/'})
+            return JsonResponse({'success': True})
+    
+    # GET request - STEP 1: Generate question
     try:
-        questions = FALLBACK_QUESTIONS.get(user_data['language'], FALLBACK_QUESTIONS['fr'])
+        generator = AdaptiveQuestionGenerator()
         
-        if current_assessment in ['bien_etre', 'resilience_ie']:
-            q_list = questions.get(current_assessment, [])
+        if question_number == 1:
+            # Generate first question (broad, exploratory)
+            question = generator.generate_first_question(
+                trait=current_trait,
+                assessment_type=current_assessment,
+                language=user_data['language']
+            )
+            logger.info(f"Generated Q1 for {current_trait}")
+            
         else:
-            q_list = questions.get(current_assessment, {}).get(current_trait, [])
-        
-        if not q_list:
-            question_text = "Décrivez votre expérience dans ce domaine."
-        else:
-            question_idx = (question_number - 1) % len(q_list)
-            question_text = q_list[question_idx]
+            # Generate adaptive second question based on Q1
+            q1_response = [r for r in user_data['responses'] 
+                          if r['trait'] == current_trait and r['assessment'] == current_assessment and r['question_number'] == 1][0]
+            
+            # Analyze Q1 answer for adaptation
+            nlp_analysis = NLPScorer().analyze_answer_semantics(
+                q1_response['answer'],
+                user_data['language']
+            )
+            
+            question = generator.generate_adaptive_second_question(
+                trait=current_trait,
+                assessment_type=current_assessment,
+                q1_answer=q1_response['answer'],
+                q1_score=q1_response['score'],
+                language=user_data['language'],
+                nlp_analysis=nlp_analysis
+            )
+            logger.info(f"Generated adaptive Q2 for {current_trait} (Q1 score: {q1_response['score']})")
+            
     except Exception as e:
         logger.error(f"Question generation error: {e}")
-        question_text = "Décrivez votre expérience dans ce domaine."
+        question = "Décrivez votre expérience dans ce domaine."
     
-    user_data['question_start_time'] = time.time()
+    user_data['current_question'] = question
     request.session['user_data'] = user_data
     request.session.modified = True
     
@@ -311,8 +238,6 @@ def quiz(request):
     completed_questions = len(user_data['responses'])
     progress_percentage = (completed_questions / total_questions) * 100
     
-    trait_intro = get_trait_intro(current_trait, user_data['language'], current_assessment)
-    
     context = {
         'session': {
             'language': user_data['language'],
@@ -320,158 +245,104 @@ def quiz(request):
             'current_trait': current_trait,
             'current_question_number': question_number,
         },
-        'question': question_text,
+        'question': question,
         'progress': int(progress_percentage),
-        'trait_intro': trait_intro,
         'current_assessment': current_assessment,
         'current_trait_display': get_localized_trait_name(current_trait, user_data['language']),
-        'trait_progress': f"{question_number}/{ASSESSMENTS[current_assessment].get('questions_per_trait', ASSESSMENTS[current_assessment].get('questions_total', 3))}",
+        'trait_progress': f"{question_number}/2",
         'assessment_name': get_assessment_name(current_assessment, user_data['language']),
     }
     
     return render(request, 'quiz.html', context)
 
-def generate_results(user_data):
-    """Generate results using FALLBACK - DEMO VERSION"""
-    results = {}
-    responses = user_data['responses']
-    language = user_data['language']
-    
-    # Big Five
-    big_five_results = {}
-    for trait in ASSESSMENTS['big_five']['traits']:
-        trait_responses = [r for r in responses if r['trait'] == trait and r['assessment'] == 'big_five']
-        if trait_responses:
-            scores = [r['score'] for r in trait_responses]
-            total_score = sum(scores)
-            avg_score = total_score / len(scores) if scores else 5.0
-            
-            big_five_results[trait] = {
-                'score': round(avg_score, 1),
-                'responses': trait_responses,
-                'detailed_analysis': fallback_generate_analysis(
-                    trait, avg_score, 'big_five', language
-                )
-            }
-    
-    results['big_five'] = big_five_results
-    
-    # DISC
-    disc_results = {}
-    for style in ASSESSMENTS['disc']['traits']:
-        style_responses = [r for r in responses if r['trait'] == style and r['assessment'] == 'disc']
-        if style_responses:
-            scores = [r['score'] for r in style_responses]
-            total_score = sum(scores)
-            avg_score = total_score / len(scores) if scores else 2.5
-            
-            disc_results[style] = {
-                'score': round(avg_score, 1),
-                'responses': style_responses,
-                'detailed_analysis': fallback_generate_analysis(
-                    style, avg_score, 'disc', language
-                )
-            }
-    
-    results['disc'] = disc_results
-    
-    # Bien-être
-    wellbeing_responses = [r for r in responses if r['assessment'] == 'bien_etre']
-    if wellbeing_responses:
-        scores = [r['score'] for r in wellbeing_responses]
-        avg_score = sum(scores) / len(scores) if scores else 5.0
-        
-        results['bien_etre'] = {
-            'score': round(avg_score, 1),
-            'responses': wellbeing_responses,
-            'detailed_analysis': fallback_generate_analysis(
-                'bien_etre', avg_score, 'bien_etre', language
-            )
-        }
-    
-    # Resilience
-    resilience_responses = [r for r in responses if r['assessment'] == 'resilience_ie']
-    if resilience_responses:
-        scores = [r['score'] for r in resilience_responses]
-        avg_score = sum(scores) / len(scores) if scores else 5.0
-        
-        results['resilience_ie'] = {
-            'score': round(avg_score, 1),
-            'responses': resilience_responses,
-            'detailed_analysis': fallback_generate_analysis(
-                'resilience_ie', avg_score, 'resilience_ie', language
-            )
-        }
-    
-    return results
-
 def get_next_step(user_data):
     """Determine next step in assessment"""
     current_assessment = user_data['current_assessment']
     current_trait = user_data.get('current_trait')
-    current_question = user_data['current_question_number']
     
     result = {'completed': False}
     
     if current_assessment == 'big_five':
-        if current_question >= ASSESSMENTS['big_five']['questions_per_trait']:
-            progress = user_data['assessment_progress']['big_five']
-            progress['completed_traits'].append(current_trait)
-            progress['current_trait_index'] += 1
-            
-            if progress['current_trait_index'] < len(ASSESSMENTS['big_five']['traits']):
-                next_trait = ASSESSMENTS['big_five']['traits'][progress['current_trait_index']]
-                result.update({
-                    'current_assessment': 'big_five',
-                    'current_trait': next_trait,
-                    'current_question_number': 1
-                })
-            else:
-                result.update({
-                    'current_assessment': 'disc',
-                    'current_trait': ASSESSMENTS['disc']['traits'][0],
-                    'current_question_number': 1
-                })
-        else:
-            result.update({'current_question_number': current_question + 1})
-    
-    elif current_assessment == 'disc':
-        if current_question >= ASSESSMENTS['disc']['questions_per_trait']:
-            progress = user_data['assessment_progress']['disc']
-            progress['completed_traits'].append(current_trait)
-            progress['current_trait_index'] += 1
-            
-            if progress['current_trait_index'] < len(ASSESSMENTS['disc']['traits']):
-                next_trait = ASSESSMENTS['disc']['traits'][progress['current_trait_index']]
-                result.update({
-                    'current_assessment': 'disc',
-                    'current_trait': next_trait,
-                    'current_question_number': 1
-                })
-            else:
-                result.update({
-                    'current_assessment': 'bien_etre',
-                    'current_trait': 'bien_etre',
-                    'current_question_number': 1
-                })
-        else:
-            result.update({'current_question_number': current_question + 1})
-    
-    elif current_assessment == 'bien_etre':
-        if current_question >= ASSESSMENTS['bien_etre']['questions_total']:
+        progress = user_data['assessment_progress']['big_five']
+        progress['completed_traits'].append(current_trait)
+        progress['current_trait_index'] += 1
+        
+        if progress['current_trait_index'] < len(ASSESSMENTS['big_five']['traits']):
+            next_trait = ASSESSMENTS['big_five']['traits'][progress['current_trait_index']]
             result.update({
-                'current_assessment': 'resilience_ie',
-                'current_trait': 'resilience_ie',
+                'current_assessment': 'big_five',
+                'current_trait': next_trait,
                 'current_question_number': 1
             })
         else:
-            result.update({'current_question_number': current_question + 1})
+            # Transition to DISC - RESET disc progress
+            user_data['assessment_progress']['disc'] = {
+                'completed_traits': [],
+                'current_trait_index': 0
+            }
+            result.update({
+                'current_assessment': 'disc',
+                'current_trait': ASSESSMENTS['disc']['traits'][0],
+                'current_question_number': 1
+            })
+    
+    elif current_assessment == 'disc':
+        progress = user_data['assessment_progress']['disc']
+        progress['completed_traits'].append(current_trait)
+        progress['current_trait_index'] += 1
+        
+        if progress['current_trait_index'] < len(ASSESSMENTS['disc']['traits']):
+            next_trait = ASSESSMENTS['disc']['traits'][progress['current_trait_index']]
+            result.update({
+                'current_assessment': 'disc',
+                'current_trait': next_trait,
+                'current_question_number': 1
+            })
+        else:
+            # Transition to bien_etre - RESET progress
+            user_data['assessment_progress']['bien_etre'] = {
+                'questions_completed': 0
+            }
+            result.update({
+                'current_assessment': 'bien_etre',
+                'current_trait': 'general',
+                'current_question_number': 1
+            })
+    
+    elif current_assessment == 'bien_etre':
+        progress = user_data['assessment_progress']['bien_etre']
+        progress['questions_completed'] += 1
+        
+        if progress['questions_completed'] < ASSESSMENTS['bien_etre']['questions_total']:
+            result.update({
+                'current_assessment': 'bien_etre',
+                'current_trait': 'general',
+                'current_question_number': progress['questions_completed'] + 1
+            })
+        else:
+            # Transition to resilience_ie - RESET progress
+            user_data['assessment_progress']['resilience_ie'] = {
+                'questions_completed': 0
+            }
+            result.update({
+                'current_assessment': 'resilience_ie',
+                'current_trait': 'general',
+                'current_question_number': 1
+            })
     
     elif current_assessment == 'resilience_ie':
-        if current_question >= ASSESSMENTS['resilience_ie']['questions_total']:
-            result.update({'completed': True})
+        progress = user_data['assessment_progress']['resilience_ie']
+        progress['questions_completed'] += 1
+        
+        if progress['questions_completed'] < ASSESSMENTS['resilience_ie']['questions_total']:
+            result.update({
+                'current_assessment': 'resilience_ie',
+                'current_trait': 'general',
+                'current_question_number': progress['questions_completed'] + 1
+            })
         else:
-            result.update({'current_question_number': current_question + 1})
+            # All assessments completed!
+            result.update({'completed': True})
     
     return result
 
@@ -485,95 +356,229 @@ def calculate_total_questions():
     return total
 
 def report(request):
-    """Generate and display report - FALLBACK ONLY"""
+    """Generate and display report with AI insights"""
     if 'user_data' not in request.session or not request.session['user_data'].get('is_completed'):
         return redirect('home')
     
     user_data = request.session['user_data']
     language = user_data['language']
     
-    results = generate_results(user_data)
-    score_explanations = generate_score_explanations(results, language)
+    # Check for manual retry
+    if request.GET.get('retry') == 'true':
+        if 'report_results' in user_data:
+            del user_data['report_results']
+            request.session.modified = True
     
+    # Check if results are already generated and COMPLETE
+    force_regenerate = False
+    results = user_data.get('report_results')
+    
+    if results:
+        # Check if new assessments are present in cached results
+        # Also check for previous errors to allow retry
+        if 'error' in results or 'bien_etre' not in results or 'resilience_ie' not in results:
+            force_regenerate = True
+            logger.info("Cached results incomplete or error, forcing regeneration")
+    else:
+        force_regenerate = True
+    
+    if force_regenerate:
+        # STEP 3: Generate AI-powered report
+        try:
+            # Validate user data before generation
+            if 'responses' not in user_data or not user_data['responses']:
+                 logger.error("No responses in user_data during report generation")
+                 results = {'error': "No responses found. Session may have been lost."}
+            else:
+                results = generate_ai_results(user_data)
+            
+                # Save results to session if at least Big Five is present
+                # We allow partial results to avoid showing nothing if one API call fails
+                if results and 'big_five' in results and results['big_five']:
+                    user_data['report_results'] = results
+                    request.session['user_data'] = user_data
+                    request.session.modified = True
+                    logger.info("Saved report results (potentially partial)")
+                else:
+                    logger.warning("Generated results invalid (missing Big Five), not caching.")
+                
+        except Exception as e:
+            logger.error(f"Critical error in report generation: {e}")
+            # Fallback to prevent crash
+            results = {'error': str(e)}
+
+    # Ensure results is not just empty dicts
+    if results and not results.get('error'):
+        has_data = any(results.get(k) for k in ['big_five', 'disc', 'bien_etre', 'resilience_ie'])
+        if not has_data:
+            logger.warning("Results dict exists but contains no data")
+            results = {'error': "Data generation failed. Please retry."}
+
     context = {
         'session': {'language': language, 'is_completed': True},
         'results': results,
-        'score_explanations': score_explanations,
+        'results': results,
     }
     
     return render(request, 'report.html', context)
 
-def generate_results(user_data):
-    """Generate results using FALLBACK"""
+def generate_ai_results(user_data):
+    """Generate results using AI Report Generator with Parallel Execution"""
+    from concurrent.futures import ThreadPoolExecutor
+    
     results = {}
     responses = user_data['responses']
     language = user_data['language']
+    generator = AIReportGenerator()
     
-    # Big Five
-    big_five_results = {}
+    # Prepare Data for Batch Processing
+    
+    # 1. Big Five Data (normalize to {q1, q2})
+    big_five_data = {}
     for trait in ASSESSMENTS['big_five']['traits']:
-        trait_responses = [r for r in responses if r['trait'] == trait and r['assessment'] == 'big_five']
-        if trait_responses:
-            scores = [r['score'] for r in trait_responses]
-            total_score = sum(scores)
+        qs = [r for r in responses if r['trait'] == trait and r['assessment'] == 'big_five']
+        if qs:
+            # Ensure ordering by question_number and pick first two
+            qs_sorted = sorted(qs, key=lambda x: x.get('question_number', 1))[:2]
+            if len(qs_sorted) >= 2:
+                big_five_data[trait] = {'q1': qs_sorted[0], 'q2': qs_sorted[1]}
             
-            big_five_results[trait] = {
-                'score': round(total_score, 1),
-                'responses': trait_responses,
-                'detailed_analysis': generate_enhanced_detailed_analysis(
-                    trait, [r['text'] for r in trait_responses], total_score, language, 'big_five'
-                )
-            }
-    
-    results['big_five'] = big_five_results
-    
-    # DISC
-    disc_results = {}
-    for style in ASSESSMENTS['disc']['traits']:
-        style_responses = [r for r in responses if r['trait'] == style and r['assessment'] == 'disc']
-        if style_responses:
-            scores = [r['score'] for r in style_responses]
-            total_score = sum(scores)
+    # 2. DISC Data (normalize to {q1, q2})
+    disc_data = {}
+    for trait in ASSESSMENTS['disc']['traits']:
+         qs = [r for r in responses if r['trait'] == trait and r['assessment'] == 'disc']
+         if qs:
+            qs_sorted = sorted(qs, key=lambda x: x.get('question_number', 1))[:2]
+            if len(qs_sorted) >= 2:
+                disc_data[trait] = {'q1': qs_sorted[0], 'q2': qs_sorted[1]}
             
-            disc_results[style] = {
-                'score': round(total_score, 1),
-                'responses': style_responses,
-                'detailed_analysis': generate_enhanced_detailed_analysis(
-                    style, [r['text'] for r in style_responses], total_score, language, 'disc'
-                )
-            }
-    
-    results['disc'] = disc_results
-    
-    # Bien-être
-    wellbeing_responses = [r for r in responses if r['assessment'] == 'bien_etre']
-    if wellbeing_responses:
-        scores = [r['score'] for r in wellbeing_responses]
-        total_score = sum(scores)
+    # 3. Bien-être Data (support >=2 answers, pick first two by question_number)
+    bien_etre_data = {}
+    qs_be = [r for r in responses if r['assessment'] == 'bien_etre']
+    if qs_be:
+        qs_be_sorted = sorted(qs_be, key=lambda x: x.get('question_number', 1))[:2]
+        if len(qs_be_sorted) >= 2:
+            bien_etre_data['general'] = {'q1': qs_be_sorted[0], 'q2': qs_be_sorted[1]}
         
-        results['bien_etre'] = {
-            'score': round(total_score, 1),
-            'responses': wellbeing_responses,
-            'detailed_analysis': generate_enhanced_detailed_analysis(
-                'bien_etre', [r['text'] for r in wellbeing_responses], total_score, language, 'bien_etre'
-            )
-        }
-    
-    # Resilience
-    resilience_responses = [r for r in responses if r['assessment'] == 'resilience_ie']
-    if resilience_responses:
-        scores = [r['score'] for r in resilience_responses]
-        total_score = sum(scores)
+    # 4. Resilience Data (support >=2 answers, pick first two by question_number)
+    resilience_data = {}
+    qs_res = [r for r in responses if r['assessment'] == 'resilience_ie']
+    if qs_res:
+        qs_res_sorted = sorted(qs_res, key=lambda x: x.get('question_number', 1))[:2]
+        if len(qs_res_sorted) >= 2:
+            resilience_data['general'] = {'q1': qs_res_sorted[0], 'q2': qs_res_sorted[1]}
         
-        results['resilience_ie'] = {
-            'score': round(total_score, 1),
-            'responses': resilience_responses,
-            'detailed_analysis': generate_enhanced_detailed_analysis(
-                'resilience_ie', [r['text'] for r in resilience_responses], total_score, language, 'resilience_ie'
-            )
-        }
-    
+    # Execute in Parallel
+    # Using 4 threads for the 4 assessment types
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        logger.info("Starting parallel report generation...")
+        future_bf = executor.submit(generator.generate_assessment_report, 'big_five', big_five_data, language)
+        future_disc = executor.submit(generator.generate_assessment_report, 'disc', disc_data, language)
+        future_be = executor.submit(generator.generate_assessment_report, 'bien_etre', bien_etre_data, language)
+        future_res = executor.submit(generator.generate_assessment_report, 'resilience_ie', resilience_data, language)
+        
+        # Gather Results
+        # Note: generate_assessment_report handles its own fallbacks, so .result() should return dicts
+        try:
+            results['big_five'] = future_bf.result()
+            logger.info("Big Five generated")
+            
+            results['disc'] = future_disc.result()
+            logger.info("DISC generated")
+            
+            be_res = future_be.result()
+            if 'general' in be_res:
+                results['bien_etre'] = be_res['general']
+                logger.info("Bien-être generated")
+            
+            res_res = future_res.result()
+            if 'general' in res_res:
+                results['resilience_ie'] = res_res['general']
+                logger.info("Resilience generated")
+                
+        except Exception as e:
+            logger.error(f"Error in parallel execution results: {e}")
+            # Consider implementing global fallback here if threads die catastrophically
+            
+    # Adapt results to template-expected structure
+    results = _adapt_results_for_template(results)
     return results
+
+def _adapt_results_for_template(results):
+    """Adapt generator output to the structure used in report.html."""
+    if not results:
+        return results
+
+    adapted = {}
+
+    # Big Five: map each trait to {score, detailed_analysis}
+    bf = results.get('big_five') or {}
+    if bf:
+        adapted_bf = {}
+        for trait, data in bf.items():
+            if not isinstance(data, dict):
+                continue
+            score10 = data.get('scaled_score') or data.get('score') or data.get('mean_score', 0) * 2
+            strengths = data.get('strengths') or []
+            dev = data.get('development_areas') or []
+            summary = data.get('summary') or data.get('standard_interpretation', '')
+            adapted_bf[trait] = {
+                'score': round(score10 or 0, 1),
+                'detailed_analysis': {
+                    'observations': summary,
+                    'points_forts': strengths,
+                    'zones_developpement': dev,
+                }
+            }
+        if adapted_bf:
+            adapted['big_five'] = adapted_bf
+
+    # DISC: template expects score out of 5
+    disc = results.get('disc') or {}
+    if disc:
+        adapted_disc = {}
+        for trait, data in disc.items():
+            if not isinstance(data, dict):
+                continue
+            score5 = data.get('mean_score') or (data.get('scaled_score', 0) / 2 if data.get('scaled_score') is not None else 0)
+            strengths = data.get('strengths') or []
+            dev = data.get('development_areas') or []
+            summary = data.get('summary') or data.get('standard_interpretation', '')
+            adapted_disc[trait] = {
+                'score': round(score5 or 0, 1),
+                'detailed_analysis': {
+                    'observations': summary,
+                    'points_forts': strengths,
+                    'zones_developpement': dev,
+                }
+            }
+        if adapted_disc:
+            adapted['disc'] = adapted_disc
+
+    # Bien-être & Resilience: each is a single object in template with {score, detailed_analysis}
+    for key in ('bien_etre', 'resilience_ie'):
+        data = results.get(key)
+        if not data:
+            continue
+        # When parallel returns, we extracted the 'general' entry into results[key]; keep mapping
+        score10 = data.get('scaled_score') or data.get('score') or data.get('mean_score', 0) * 2
+        strengths = data.get('strengths') or []
+        dev = data.get('development_areas') or []
+        summary = data.get('summary') or data.get('standard_interpretation', '')
+        adapted[key] = {
+            'score': round(score10 or 0, 1),
+            'detailed_analysis': {
+                'observations': summary,
+                'points_forts': strengths,
+                'zones_developpement': dev,
+            }
+        }
+
+    # Preserve error if any
+    if results.get('error'):
+        adapted['error'] = results['error']
+
+    return adapted
 
 def get_assessment_name(assessment_type, language):
     """Get localized assessment name"""
@@ -588,3 +593,11 @@ def get_assessment_name(assessment_type, language):
 def get_localized_trait_name(trait, language):
     """Get localized trait name"""
     return TRAIT_DISPLAY_NAMES.get(trait, {}).get(language, trait)
+
+def reset_assessment(request):
+    """Reset assessment"""
+    language = request.session.get('language', 'fr')
+    request.session.clear()
+    request.session['language'] = language
+    request.session.modified = True
+    return redirect('home')

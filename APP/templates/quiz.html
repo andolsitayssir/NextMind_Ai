@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ session.language }}">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -25,7 +26,7 @@
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
             border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             max-width: 650px;
             width: 100%;
             padding: 2rem;
@@ -38,6 +39,7 @@
                 opacity: 0;
                 transform: translateY(30px) scale(0.95);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0) scale(1);
@@ -65,8 +67,15 @@
         }
 
         @keyframes titlePulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
         }
 
         .assessment-subtitle {
@@ -91,7 +100,7 @@
 
         /* Progress Section */
         .progress-section {
-            margin-bottom: 2rem;
+            margin-bottom: 0.5rem;
         }
 
         .progress-info {
@@ -119,7 +128,7 @@
             background: linear-gradient(90deg, #f8f9ff, #e8ecff);
             border-radius: 25px;
             overflow: hidden;
-            box-shadow: inset 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1);
             position: relative;
         }
 
@@ -135,8 +144,17 @@
         }
 
         @keyframes progressGlow {
-            0%, 100% { background-position: 0% 50%; box-shadow: 0 0 20px rgba(102, 126, 234, 0.3); }
-            50% { background-position: 100% 50%; box-shadow: 0 0 25px rgba(240, 147, 251, 0.4); }
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+                box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+            }
+
+            50% {
+                background-position: 100% 50%;
+                box-shadow: 0 0 25px rgba(240, 147, 251, 0.4);
+            }
         }
 
         .progress-bar-fill::after {
@@ -146,13 +164,18 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
             animation: progressShine 2s infinite;
         }
 
         @keyframes progressShine {
-            0% { left: -100%; }
-            100% { left: 100%; }
+            0% {
+                left: -100%;
+            }
+
+            100% {
+                left: 100%;
+            }
         }
 
         /* Question Section */
@@ -166,6 +189,7 @@
                 opacity: 0;
                 transform: translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -180,7 +204,7 @@
             line-height: 1.7;
             text-align: center;
             padding: 1rem;
-            background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(248,249,255,0.9));
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(248, 249, 255, 0.9));
             border-radius: 12px;
             border: 1px solid rgba(102, 126, 234, 0.1);
         }
@@ -194,7 +218,7 @@
             font-size: 1rem;
             font-family: inherit;
             resize: vertical;
-            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(248,249,255,0.7));
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 249, 255, 0.7));
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             outline: none;
             color: #4a4f6a;
@@ -208,9 +232,9 @@
 
         .answer-input:focus {
             border-color: #667eea;
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1), 0 8px 25px rgba(0,0,0,0.1);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1), 0 8px 25px rgba(0, 0, 0, 0.1);
             transform: translateY(-2px);
-            background: rgba(255,255,255,0.95);
+            background: rgba(255, 255, 255, 0.95);
         }
 
         /* Button Section */
@@ -242,7 +266,7 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
             transition: left 0.5s;
         }
 
@@ -286,8 +310,13 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .loading-text {
@@ -344,18 +373,22 @@
 
         /* Accessibility improvements */
         @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after {
+
+            *,
+            *::before,
+            *::after {
                 animation-duration: 0.01ms !important;
                 animation-iteration-count: 1 !important;
                 transition-duration: 0.01ms !important;
             }
         }
-        .head{
+
+        .head {
             position: fixed;
-            margin-top :-80vh;
+            margin-top: -80vh;
             margin-left: -70vw;
-            
-            
+
+
             background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -363,27 +396,29 @@
             margin-bottom: 0.3rem;
             letter-spacing: 1px;
         }
-        @media screen {
-            
-        }
-        a{
+
+        @media screen {}
+
+        a {
             text-decoration: none;
-        }   
+        }
     </style>
 </head>
+
 <body>
     <div class="head">
         <header>
-              <a href="{% url 'go_home' %}">  <div class="title">
-          <h1>NextMind</h1>
-          <div class="micro">
-            {% if request.session.language == 'fr' %}INSIGHT • ACTION • GROWTH{% endif %}
-            {% if request.session.language == 'en' %}PERSPECTIVE • ACTION • CROISSANCE{% endif %}
-            {% if request.session.language == 'ar' %}البصيرة • العمل • النمو{% endif %}
+            <a href="{% url 'go_home' %}">
+                <div class="title">
+                    <h1>NextMind</h1>
+                    <div class="micro">
+                        {% if request.session.language == 'fr' %}INSIGHT • ACTION • GROWTH{% endif %}
+                        {% if request.session.language == 'en' %}PERSPECTIVE • ACTION • CROISSANCE{% endif %}
+                        {% if request.session.language == 'ar' %}البصيرة • العمل • النمو{% endif %}
 
-        </div>
-      </div>
-    </a>
+                    </div>
+                </div>
+            </a>
         </header>
     </div>
     <div class="quiz-container">
@@ -392,38 +427,42 @@
             <!-- Assessment Title - Big and Animated -->
             <h1 class="assessment-title">
                 {% if session.language == 'fr' %}
-                    {% if current_assessment == 'big_five' %}Big Five
-                    {% elif current_assessment == 'disc' %}DISC
-                    {% elif current_assessment == 'bien_etre' %}Bien-être
-                    {% elif current_assessment == 'resilience_ie' %}Résilience & IE
-                    {% else %}{{ current_assessment|title }}
-                    {% endif %}
+                {% if current_assessment == 'big_five' %}Big Five
+                {% elif current_assessment == 'disc' %}DISC
+                {% elif current_assessment == 'bien_etre' %}Bien-être
+                {% elif current_assessment == 'resilience_ie' %}Résilience & IE
+                {% else %}{{ current_assessment|title }}
+                {% endif %}
                 {% elif session.language == 'en' %}
-                    {% if current_assessment == 'big_five' %}Big Five
-                    {% elif current_assessment == 'disc' %}DISC
-                    {% elif current_assessment == 'bien_etre' %}Well-being
-                    {% elif current_assessment == 'resilience_ie' %}Resilience & EI
-                    {% else %}{{ current_assessment|title }}
-                    {% endif %}
+                {% if current_assessment == 'big_five' %}Big Five
+                {% elif current_assessment == 'disc' %}DISC
+                {% elif current_assessment == 'bien_etre' %}Well-being
+                {% elif current_assessment == 'resilience_ie' %}Resilience & EI
+                {% else %}{{ current_assessment|title }}
+                {% endif %}
                 {% else %}
-                    {% if current_assessment == 'big_five' %}العوامل الخمسة
-                    {% elif current_assessment == 'disc' %}DISC
-                    {% elif current_assessment == 'bien_etre' %}الرفاهة
-                    {% elif current_assessment == 'resilience_ie' %}المرونة والذكاء العاطفي
-                    {% else %}{{ current_assessment|title }}
-                    {% endif %}
+                {% if current_assessment == 'big_five' %}العوامل الخمسة
+                {% elif current_assessment == 'disc' %}DISC
+                {% elif current_assessment == 'bien_etre' %}الرفاهة
+                {% elif current_assessment == 'resilience_ie' %}المرونة والذكاء العاطفي
+                {% else %}{{ current_assessment|title }}
+                {% endif %}
                 {% endif %}
             </h1>
-            
-            <p class="assessment-subtitle">
-                {% if session.language == 'fr' %}
-                    Question {{ session.current_question_number }}
-                {% elif session.language == 'en' %}
-                    Question {{ session.current_question_number }}
-                {% else %}
-                    السؤال {{ session.current_question_number }}
-                {% endif %}
-            </p>
+
+
+        </div>
+        <div style="text-align: center; ">
+            <div
+                style="display: inline-block; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(240, 147, 251, 0.1)); padding: 0.8rem 2rem; border-radius: 50px; border: 2px solid rgba(102, 126, 234, 0.2);">
+
+                <div style="font-size: 0.8rem; font-weight: 700; color: #667eea; margin-top: 0.3rem;">
+                    {{ current_trait_display }}
+                </div>
+                <div style="font-size: 0.3rem; color: #a0a8c4; margin-top: 0.2rem;">
+                    {{ trait_progress }}
+                </div>
+            </div>
         </div>
 
         <!-- Progress Section -->
@@ -439,6 +478,9 @@
             </div>
         </div>
 
+        <!-- Trait Being Evaluated -->
+
+
         <!-- Trait Analysis Section - Smaller and Simple -->
         {% if trait_intro %}
         <div class="trait-analysis">
@@ -453,36 +495,30 @@
         <div class="question-section">
             <div class="question-text">
                 {% if question %}
-                    {{ question }}
+                {{ question }}
                 {% else %}
-                    <em>
-                        {% if session.language == 'fr' %}Question en cours de chargement...
-                        {% elif session.language == 'en' %}Question loading...
-                        {% else %}جاري تحميل السؤال...
-                        {% endif %}
-                    </em>
+                <em>
+                    {% if session.language == 'fr' %}Question en cours de chargement...
+                    {% elif session.language == 'en' %}Question loading...
+                    {% else %}جاري تحميل السؤال...
+                    {% endif %}
+                </em>
                 {% endif %}
             </div>
-            
+
             <form id="quiz-form" method="post">
                 {% csrf_token %}
-                <textarea 
-                    name="answer" 
-                    id="answer-input"
-                    class="answer-input" 
-                    placeholder="{{ ui_text.answer_placeholder }}"
-                    required
-                    maxlength="1000"
-                ></textarea>
-                
+                <textarea name="answer" id="answer-input" class="answer-input"
+                    placeholder="{{ ui_text.answer_placeholder }}" required maxlength="1000"></textarea>
+
                 <div class="buttons">
                     <button type="submit" class="btn-primary" id="submit-btn">
                         {% if session.language == 'fr' %}
-                            {{ ui_text.submit_button }} ✨
+                        {{ ui_text.submit_button }} Continue
                         {% elif session.language == 'en' %}
-                            {{ ui_text.submit_button }} ✨
+                        {{ ui_text.submit_button }} Continue
                         {% else %}
-                            {{ ui_text.submit_button }} ✨
+                        {{ ui_text.submit_button }} التالي
                         {% endif %}
                     </button>
                 </div>
@@ -494,237 +530,238 @@
             <div class="spinner"></div>
             <p class="loading-text">
                 {% if session.language == 'fr' %}
-                    Analyse de votre réponse en cours...
+                Analyse de votre réponse en cours...
                 {% elif session.language == 'en' %}
-                    Analyzing your response...
+                Analyzing your response...
                 {% else %}
-                    جاري تحليل إجابتك...
+                جاري تحليل إجابتك...
                 {% endif %}
             </p>
         </div>
     </div>
 
     <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('quiz-form');
-    const continueBtn = document.querySelector('.btn-primary');
-    const answerInput = document.getElementById('answer-input');
-    const errorDiv = document.getElementById('error-message');
-    const loadingDiv = document.querySelector('.loading');
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('quiz-form');
+            const continueBtn = document.querySelector('.btn-primary');
+            const answerInput = document.getElementById('answer-input');
+            const errorDiv = document.getElementById('error-message');
+            const loadingDiv = document.querySelector('.loading');
 
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const answer = answerInput.value.trim();
-        
-        // Enhanced client-side validation
-        const validationResult = validateAnswerClient(answer);
-        if (!validationResult.isValid) {
-            showError(validationResult.message);
-            return;
-        }
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
 
-        // Show loading state
-        continueBtn.disabled = true;
-        continueBtn.textContent = '{% if session.language == "fr" %}En cours...{% elif session.language == "en" %}Processing...{% else %}جاري المعالجة...{% endif %}';
-        
-        // Hide error message
-        hideError();
+                const answer = answerInput.value.trim();
 
-        const formData = new FormData(form);
-        
-        fetch(form.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                // Enhanced client-side validation
+                const validationResult = validateAnswerClient(answer);
+                if (!validationResult.isValid) {
+                    showError(validationResult.message);
+                    return;
+                }
+
+                // Show loading state
+                continueBtn.disabled = true;
+                continueBtn.textContent = '{% if session.language == "fr" %}En cours...{% elif session.language == "en" %}Processing...{% else %}جاري المعالجة...{% endif %}';
+
+                // Hide error message
+                hideError();
+
+                const formData = new FormData(form);
+
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.error) {
+                            showError(data.error);
+                            resetButton();
+                        } else if (data.completed) {
+                            window.location.href = data.redirect;
+                        } else if (data.success) {
+                            window.location.reload();
+                        } else {
+                            showError('{% if session.language == "fr" %}Erreur inattendue{% elif session.language == "en" %}Unexpected error{% else %}خطأ غير متوقع{% endif %}');
+                            resetButton();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showError('{% if session.language == "fr" %}Erreur de connexion. Veuillez réessayer.{% elif session.language == "en" %}Connection error. Please try again.{% else %}خطأ في الاتصال. يرجى المحاولة مرة أخرى.{% endif %}');
+                        resetButton();
+                    });
+            });
+
+            // Client-side validation function
+            function validateAnswerClient(answer) {
+                const language = '{{ session.language }}';
+
+                // Empty check
+                if (!answer || answer.trim().length === 0) {
+                    return {
+                        isValid: false,
+                        message: language === 'fr' ? 'Veuillez saisir une réponse' :
+                            language === 'en' ? 'Please enter an answer' :
+                                'يرجى إدخال إجابة'
+                    };
+                }
+
+                // Length checks - more lenient
+                if (answer.trim().length < 5) {
+                    return {
+                        isValid: false,
+                        message: language === 'fr' ? 'Votre réponse est trop courte. Décrivez votre approche plus en détail (minimum 5 caractères).' :
+                            language === 'en' ? 'Your answer is too short. Describe your approach in more detail (minimum 5 characters).' :
+                                'إجابتك قصيرة جداً. يرجى وصف نهجك بتفصيل أكثر (5 أحرف على الأقل).'
+                    };
+                }
+
+                if (answer.length > 1000) {
+                    return {
+                        isValid: false,
+                        message: language === 'fr' ? 'Votre réponse est trop longue. Veuillez la raccourcir (maximum 1000 caractères).' :
+                            language === 'en' ? 'Your answer is too long. Please shorten it (maximum 1000 characters).' :
+                                'إجابتك طويلة جداً. يرجى تقصيرها (1000 حرف كحد أقصى).'
+                    };
+                }
+
+                // Pattern checks for obvious nonsense
+                const lowerAnswer = answer.toLowerCase().trim();
+
+                // Check for single characters or very short meaningless text
+                if (/^[a-z]{1,3}$/.test(lowerAnswer) || /^[0-9]+$/.test(lowerAnswer)) {
+                    return {
+                        isValid: false,
+                        message: language === 'fr' ? 'Veuillez fournir une réponse significative qui décrit votre comportement.' :
+                            language === 'en' ? 'Please provide a meaningful response that describes your behavior.' :
+                                'يرجى تقديم إجابة ذات معنى تصف سلوكك.'
+                    };
+                }
+
+                // Check for repeated characters (e.g., "aaaaa", "11111")
+                if (/^(.)\1{4,}$/.test(lowerAnswer)) {
+                    return {
+                        isValid: false,
+                        message: language === 'fr' ? 'Veuillez éviter les répétitions excessives de caractères.' :
+                            language === 'en' ? 'Please avoid excessive character repetition.' :
+                                'يرجى تجنب التكرار المفرط للأحرف.'
+                    };
+                }
+
+                // Check for common test words
+                const testWords = ['test', 'testing', 'test123', 'lorem', 'ipsum', 'qwerty', 'asdf'];
+                if (testWords.includes(lowerAnswer)) {
+                    return {
+                        isValid: false,
+                        message: language === 'fr' ? 'Veuillez décrire votre expérience personnelle avec vos propres mots.' :
+                            language === 'en' ? 'Please describe your personal experience in your own words.' :
+                                'يرجى وصف تجربتك الشخصية بكلماتك الخاصة.'
+                    };
+                }
+
+                // Check for excessive repetition of words - more lenient
+                const words = lowerAnswer.split(/\s+/);
+                if (words.length > 5) { // Only check if more than 5 words
+                    const uniqueWords = new Set(words);
+                    if (uniqueWords.size / words.length < 0.2) { // Less than 20% unique words (was 40%)
+                        return {
+                            isValid: false,
+                            message: language === 'fr' ? 'Votre réponse contient trop de répétitions. Veuillez varier votre vocabulaire.' :
+                                language === 'en' ? 'Your response contains too much repetition. Please vary your vocabulary.' :
+                                    'إجابتك تحتوي على تكرار مفرط. يرجى تنويع مفرداتك.'
+                        };
+                    }
+                }
+
+                // Check if user copied the question as answer - more lenient
+                const questionText = document.querySelector('.question-card h3')?.textContent?.toLowerCase() || '';
+                const questionWords = questionText.split(/\s+/).filter(word => word.length > 4); // Only longer words
+                const answerWords = lowerAnswer.split(/\s+/);
+
+                // Count how many question words appear in the answer
+                let matchCount = 0;
+                questionWords.forEach(qWord => {
+                    if (answerWords.some(aWord => aWord === qWord)) { // Exact matches only
+                        matchCount++;
+                    }
+                });
+
+                // If more than 70% of question words appear exactly in answer, it's likely copied (was 50%)
+                if (questionWords.length > 0 && (matchCount / questionWords.length) > 0.7) {
+                    return {
+                        isValid: false,
+                        message: language === 'fr' ? 'Il semble que vous ayez copié la question. Veuillez répondre en décrivant votre comportement personnel.' :
+                            language === 'en' ? 'It appears you copied the question. Please answer by describing your personal behavior.' :
+                                'يبدو أنك نسخت السؤال. يرجى الإجابة بوصف سلوكك الشخصي.'
+                    };
+                }
+
+                // Language mixing check - more lenient
+                if (language === 'fr') {
+                    // Check for English words mixed in French answers - higher threshold
+                    const englishWords = ['situations', 'you', 'manage', 'situation', 'when', 'how', 'what'];
+                    const frenchWords = lowerAnswer.split(/\s+/);
+                    const englishCount = frenchWords.filter(word => englishWords.includes(word)).length;
+                    if (englishCount > 4) { // Increased from 2 to 4
+                        return {
+                            isValid: false,
+                            message: 'Veuillez répondre principalement en français.'
+                        };
+                    }
+                }
+
+                if (language === 'en') {
+                    // Check for French words mixed in English answers - higher threshold
+                    const frenchWords = ['gérer', 'situations', 'vous', 'dans', 'une'];
+                    const englishWordsList = lowerAnswer.split(/\s+/);
+                    const frenchCount = englishWordsList.filter(word => frenchWords.includes(word)).length;
+                    if (frenchCount > 4) { // Increased from 2 to 4
+                        return {
+                            isValid: false,
+                            message: 'Please answer primarily in English.'
+                        };
+                    }
+                }
+
+                // Basic relevance check - more lenient, removed strict personal content requirement
+                // Now just check length and basic content
+                if (answer.trim().length < 5) {
+                    return {
+                        isValid: false,
+                        message: language === 'fr' ? 'Veuillez décrire votre approche plus en détail.' :
+                            language === 'en' ? 'Please describe your approach in more detail.' :
+                                'يرجى وصف نهجك بتفصيل أكثر.'
+                    };
+                }
+
+                return { isValid: true };
             }
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
+
+            function showError(message) {
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
             }
-            return response.json();
-        })
-        .then(data => {
-            if (data.error) {
-                showError(data.error);
-                resetButton();
-            } else if (data.completed) {
-                window.location.href = data.redirect;
-            } else if (data.success) {
-                window.location.reload();
-            } else {
-                showError('{% if session.language == "fr" %}Erreur inattendue{% elif session.language == "en" %}Unexpected error{% else %}خطأ غير متوقع{% endif %}');
-                resetButton();
+
+            function hideError() {
+                errorDiv.style.display = 'none';
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showError('{% if session.language == "fr" %}Erreur de connexion. Veuillez réessayer.{% elif session.language == "en" %}Connection error. Please try again.{% else %}خطأ في الاتصال. يرجى المحاولة مرة أخرى.{% endif %}');
-            resetButton();
+
+            function resetButton() {
+                continueBtn.disabled = false;
+                continueBtn.innerHTML = '{% if session.language == "fr" %}Continuer{% elif session.language == "en" %}Continue{% else %}متابعة {% endif %}';
+            }
         });
-    });
-
-    // Client-side validation function
-    function validateAnswerClient(answer) {
-        const language = '{{ session.language }}';
-        
-        // Empty check
-        if (!answer || answer.trim().length === 0) {
-            return {
-                isValid: false,
-                message: language === 'fr' ? 'Veuillez saisir une réponse' : 
-                        language === 'en' ? 'Please enter an answer' : 
-                        'يرجى إدخال إجابة'
-            };
-        }
-
-        // Length checks - more lenient
-        if (answer.trim().length < 5) {
-            return {
-                isValid: false,
-                message: language === 'fr' ? 'Votre réponse est trop courte. Décrivez votre approche plus en détail (minimum 5 caractères).' : 
-                        language === 'en' ? 'Your answer is too short. Describe your approach in more detail (minimum 5 characters).' : 
-                        'إجابتك قصيرة جداً. يرجى وصف نهجك بتفصيل أكثر (5 أحرف على الأقل).'
-            };
-        }
-
-        if (answer.length > 1000) {
-            return {
-                isValid: false,
-                message: language === 'fr' ? 'Votre réponse est trop longue. Veuillez la raccourcir (maximum 1000 caractères).' : 
-                        language === 'en' ? 'Your answer is too long. Please shorten it (maximum 1000 characters).' : 
-                        'إجابتك طويلة جداً. يرجى تقصيرها (1000 حرف كحد أقصى).'
-            };
-        }
-
-        // Pattern checks for obvious nonsense
-        const lowerAnswer = answer.toLowerCase().trim();
-        
-        // Check for single characters or very short meaningless text
-        if (/^[a-z]{1,3}$/.test(lowerAnswer) || /^[0-9]+$/.test(lowerAnswer)) {
-            return {
-                isValid: false,
-                message: language === 'fr' ? 'Veuillez fournir une réponse significative qui décrit votre comportement.' : 
-                        language === 'en' ? 'Please provide a meaningful response that describes your behavior.' : 
-                        'يرجى تقديم إجابة ذات معنى تصف سلوكك.'
-            };
-        }
-
-        // Check for repeated characters (e.g., "aaaaa", "11111")
-        if (/^(.)\1{4,}$/.test(lowerAnswer)) {
-            return {
-                isValid: false,
-                message: language === 'fr' ? 'Veuillez éviter les répétitions excessives de caractères.' : 
-                        language === 'en' ? 'Please avoid excessive character repetition.' : 
-                        'يرجى تجنب التكرار المفرط للأحرف.'
-            };
-        }
-
-        // Check for common test words
-        const testWords = ['test', 'testing', 'test123', 'lorem', 'ipsum', 'qwerty', 'asdf'];
-        if (testWords.includes(lowerAnswer)) {
-            return {
-                isValid: false,
-                message: language === 'fr' ? 'Veuillez décrire votre expérience personnelle avec vos propres mots.' : 
-                        language === 'en' ? 'Please describe your personal experience in your own words.' : 
-                        'يرجى وصف تجربتك الشخصية بكلماتك الخاصة.'
-            };
-        }
-
-        // Check for excessive repetition of words - more lenient
-        const words = lowerAnswer.split(/\s+/);
-        if (words.length > 5) { // Only check if more than 5 words
-            const uniqueWords = new Set(words);
-            if (uniqueWords.size / words.length < 0.2) { // Less than 20% unique words (was 40%)
-                return {
-                    isValid: false,
-                    message: language === 'fr' ? 'Votre réponse contient trop de répétitions. Veuillez varier votre vocabulaire.' : 
-                            language === 'en' ? 'Your response contains too much repetition. Please vary your vocabulary.' : 
-                            'إجابتك تحتوي على تكرار مفرط. يرجى تنويع مفرداتك.'
-                };
-            }
-        }
-
-        // Check if user copied the question as answer - more lenient
-        const questionText = document.querySelector('.question-card h3')?.textContent?.toLowerCase() || '';
-        const questionWords = questionText.split(/\s+/).filter(word => word.length > 4); // Only longer words
-        const answerWords = lowerAnswer.split(/\s+/);
-        
-        // Count how many question words appear in the answer
-        let matchCount = 0;
-        questionWords.forEach(qWord => {
-            if (answerWords.some(aWord => aWord === qWord)) { // Exact matches only
-                matchCount++;
-            }
-        });
-        
-        // If more than 70% of question words appear exactly in answer, it's likely copied (was 50%)
-        if (questionWords.length > 0 && (matchCount / questionWords.length) > 0.7) {
-            return {
-                isValid: false,
-                message: language === 'fr' ? 'Il semble que vous ayez copié la question. Veuillez répondre en décrivant votre comportement personnel.' : 
-                        language === 'en' ? 'It appears you copied the question. Please answer by describing your personal behavior.' : 
-                        'يبدو أنك نسخت السؤال. يرجى الإجابة بوصف سلوكك الشخصي.'
-            };
-        }
-
-        // Language mixing check - more lenient
-        if (language === 'fr') {
-            // Check for English words mixed in French answers - higher threshold
-            const englishWords = ['situations', 'you', 'manage', 'situation', 'when', 'how', 'what'];
-            const frenchWords = lowerAnswer.split(/\s+/);
-            const englishCount = frenchWords.filter(word => englishWords.includes(word)).length;
-            if (englishCount > 4) { // Increased from 2 to 4
-                return {
-                    isValid: false,
-                    message: 'Veuillez répondre principalement en français.'
-                };
-            }
-        }
-
-        if (language === 'en') {
-            // Check for French words mixed in English answers - higher threshold
-            const frenchWords = ['gérer', 'situations', 'vous', 'dans', 'une'];
-            const englishWordsList = lowerAnswer.split(/\s+/);
-            const frenchCount = englishWordsList.filter(word => frenchWords.includes(word)).length;
-            if (frenchCount > 4) { // Increased from 2 to 4
-                return {
-                    isValid: false,
-                    message: 'Please answer primarily in English.'
-                };
-            }
-        }
-
-        // Basic relevance check - more lenient, removed strict personal content requirement
-        // Now just check length and basic content
-        if (answer.trim().length < 5) {
-            return {
-                isValid: false,
-                message: language === 'fr' ? 'Veuillez décrire votre approche plus en détail.' : 
-                        language === 'en' ? 'Please describe your approach in more detail.' : 
-                        'يرجى وصف نهجك بتفصيل أكثر.'
-            };
-        }
-
-        return { isValid: true };
-    }
-
-    function showError(message) {
-        errorDiv.textContent = message;
-        errorDiv.style.display = 'block';
-    }
-
-    function hideError() {
-        errorDiv.style.display = 'none';
-    }
-
-    function resetButton() {
-        continueBtn.disabled = false;
-        continueBtn.innerHTML = '{% if session.language == "fr" %}Continuer{% elif session.language == "en" %}Continue{% else %}متابعة {% endif %}';
-    }
-});
     </script>
 </body>
+
 </html>

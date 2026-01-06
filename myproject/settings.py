@@ -56,15 +56,23 @@ WSGI_APPLICATION = 'myproject.wsgi.application'
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.getenv("POSTGRES_DB", "nextmind_db"),
-        "USER": os.getenv("POSTGRES_USER", "nextmind_user"),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD", ""),
-        "HOST": os.getenv("POSTGRES_HOST", "127.0.0.1"),
-        "PORT": os.getenv("POSTGRES_PORT", "5432"),
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# PostgreSQL configuration (commented out for testing)
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.postgresql",
+#         "NAME": os.getenv("POSTGRES_DB", "nextmind_db"),
+#         "USER": os.getenv("POSTGRES_USER", "nextmind_user"),
+#         "PASSWORD": os.getenv("POSTGRES_PASSWORD", ""),
+#         "HOST": os.getenv("POSTGRES_HOST", "127.0.0.1"),
+#         "PORT": os.getenv("POSTGRES_PORT", "5432"),
+#     }
+# }
 
 
 MEDIA_URL = '/media/'
@@ -74,8 +82,8 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 
 USE_I18N = False
 USE_TZ = False
-# Session configuration - store everything in browser sessions
-SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
+# Session configuration - use database for large session data
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Changed from signed_cookies
 SESSION_COOKIE_AGE = 7200  # 2 hours
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_SAVE_EVERY_REQUEST = True
