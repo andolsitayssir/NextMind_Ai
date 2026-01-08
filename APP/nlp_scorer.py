@@ -6,7 +6,9 @@ import json
 import logging
 import re
 from .openrouter_client import OpenRouterClient
-from .trait_guidelines import get_scoring_guide, get_trait_keywords
+from .trait_guidelines import get_scoring_guide, get_trait_keywords, get_trait_guidelines
+from .vector_engine import VectorEngine
+from .evaluation_engine import EvaluationEngine
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +18,11 @@ class NLPScorer:
     
     def __init__(self):
         self.client = OpenRouterClient()
+        self.vector_engine = VectorEngine()
+        try:
+            self.evaluation_engine = EvaluationEngine()
+        except Exception:
+            self.evaluation_engine = None
     
     def score_answer(self, question, answer, trait, assessment_type, language):
         """
@@ -65,6 +72,21 @@ class NLPScorer:
                 'nlp_features': nlp_features
             }
             
+            # --- CONSISTENCY CHECK (Evaluation Engine) ---
+            if self.evaluation_engine:
+                 is_consistent, critique = self.evaluation_engine.evaluate_score_consistency(
+                     score=score,
+                     reasoning=result['reasoning'],
+                     answer=answer
+                 )
+                 
+                 if not is_consistent:
+                     logger.warning(f"Score Inconsistency Detected: {critique}")
+                     # Penalize confidence significantly if logic doesn't hold
+                     result['confidence'] = max(0.1, result['confidence'] - 0.4)
+                     result['reasoning'] += f" [Note: Potential inconsistency detected: {critique}]"
+            # ---------------------------------------------
+            
             logger.info(f"Scored answer for {trait}: {score}/5 (confidence: {result['confidence']:.2f})")
             return result
             
@@ -72,34 +94,36 @@ class NLPScorer:
             logger.error(f"Error scoring answer: {e}")
             # Fallback to NLP-only scoring
             return self._fallback_nlp_score(answer, trait, assessment_type, language, nlp_features)
-    
+
     def _extract_nlp_features(self, answer, trait, assessment_type, language):
         """Extract NLP features from answer"""
         words = answer.split()
         word_count = len(words)
         
-        # Get trait-specific keywords
+        # Get trait-specific keywords (Legacy/Fallback)
         keywords = get_trait_keywords(trait, assessment_type, language)
         
-        # Find matching keywords
-        answer_lower = answer.lower()
-        keywords_high_found = [kw for kw in keywords['high'] if kw.lower() in answer_lower]
-        keywords_low_found = [kw for kw in keywords['low'] if kw.lower() in answer_lower]
+        # Vector Semantic Analysis
+        semantic_score = 0
+        if self.vector_engine.is_ready():
+            guidelines = get_trait_guidelines(trait, assessment_type, language)
+            # Use description as the "concept" to match against
+            description = guidelines.get('description', trait)
+            semantic_score = self.vector_engine.get_semantic_score_for_trait(answer, description)
         
-        # Calculate depth score (based on length and specificity)
-        depth_score = min(1.0, word_count / 50.0)  # 50+ words = max depth
+        # Calculate depth score
+        depth_score = min(1.0, word_count / 50.0)
         
         # Language-specific specificity indicators
         specificity_patterns = self._get_specificity_patterns(language)
-        specificity_count = sum(1 for pattern in specificity_patterns if re.search(pattern, answer_lower))
+        specificity_count = sum(1 for pattern in specificity_patterns if re.search(pattern, answer.lower()))
         specificity_score = min(1.0, specificity_count / 3.0)
         
         return {
             'word_count': word_count,
             'depth_score': round(depth_score, 2),
             'specificity_score': round(specificity_score, 2),
-            'keywords_high_found': keywords_high_found,
-            'keywords_low_found': keywords_low_found,
+            'semantic_match_score': semantic_score, # 0-100
             'has_examples': specificity_count > 0
         }
     
@@ -148,34 +172,24 @@ USER'S ANSWER:
 SCORING GUIDELINES (from cahier de charge):
 {scoring_guide}
 
-NLP ANALYSIS:
+CONTEXT ANALYSIS:
 - Answer length: {nlp_features['word_count']} words
-- Depth score: {nlp_features['depth_score']} (0-1 scale)
-- Specificity score: {nlp_features['specificity_score']} (0-1 scale)
-- High trait keywords found: {', '.join(nlp_features['keywords_high_found']) if nlp_features['keywords_high_found'] else 'none'}
-- Low trait keywords found: {', '.join(nlp_features['keywords_low_found']) if nlp_features['keywords_low_found'] else 'none'}
-- Contains specific examples: {'yes' if nlp_features['has_examples'] else 'no'}
+- Semantic Match (Vector): {nlp_features['semantic_match_score']}% (Alignment with trait concept)
+- Vague answer risk: {'High' if nlp_features['word_count'] < 10 else 'Low'}
 
-SCORING RULES:
-1. Score from 1 to 5 (integers only)
-2. Base score on the CONTENT and MEANING of the answer, not just keywords
-3. Consider the psychological theory behind the trait
-4. A score of 1-2 indicates LOW trait expression
-5. A score of 3 indicates MODERATE/NEUTRAL trait expression
-6. A score of 4-5 indicates HIGH trait expression
-7. Provide clear, concise reasoning (max 150 characters)
-8. Estimate your confidence (0.0 to 1.0)
-
-IMPORTANT:
-- If the answer is vague or too short (< 10 words), score conservatively (2-3)
-- If the answer shows clear trait alignment, score accordingly (1-2 or 4-5)
-- If the answer is ambiguous, score 3
-- DO NOT give high scores without clear evidence in the answer
+SCORING INSTRUCTIONS:
+1. SEMANTIC ALIGNMENT: Does the answer's *meaning* align with the High or Low description? Do not look for exact keywords, but analyze the sentiment and intent.
+2. CONCRETENESS: Did the user provide specific details or context? (The answer is short, so look for density of meaning).
+3. SCORE ESTIMATION:
+    - 1-2: Clearly matches the "Low" description or expresses inability/dislike.
+    - 3: Ambiguous, neutral, or "it depends".
+    - 4-5: Clearly matches the "High" description with conviction.
+4. CONFIDENCE: Rate your confidence (0.0-1.0). If the answer is too short (e.g. "yes", "no", "idk"), confidence should be low.
 
 Return your response in this EXACT JSON format:
 {{
     "score": <integer 1-5>,
-    "reasoning": "<brief explanation in {language}>",
+    "reasoning": "<brief explanation in {language} focusing on WHY the answer fits the level>",
     "confidence": <float 0.0-1.0>
 }}"""
 
@@ -185,24 +199,27 @@ Return your response in this EXACT JSON format:
         """Fallback scoring using only NLP features (no LLM)"""
         
         # Simple heuristic scoring
-        high_keywords = len(nlp_features['keywords_high_found'])
-        low_keywords = len(nlp_features['keywords_low_found'])
-        
-        if high_keywords > low_keywords:
-            base_score = 4
-        elif low_keywords > high_keywords:
+        # If words are very few (< 5), likely low quality
+        if nlp_features['word_count'] < 5:
             base_score = 2
+        elif nlp_features['word_count'] > 30:
+            # Long answers usually imply effort -> slightly higher fallback
+            base_score = 4
         else:
+            # Neutral default
             base_score = 3
         
-        # Adjust for depth
-        if nlp_features['depth_score'] < 0.3:
-            base_score = max(2, base_score - 1)  # Penalize very short answers
+        # Slight adjustment if strong Semantic Match calculated
+        if nlp_features.get('semantic_match_score', 0) > 60:
+             base_score = min(5, base_score + 1)
+        elif nlp_features.get('semantic_match_score', 0) < 20 and nlp_features['word_count'] > 10:
+             # Long but irrelevant answer -> penalize
+             base_score = max(1, base_score - 1)
         
         return {
             'score': base_score,
-            'reasoning': f"Score basé sur l'analyse NLP (fallback)",
-            'confidence': 0.6,
+            'reasoning': f"Score basé sur la longueur et la densité (fallback)",
+            'confidence': 0.4,  # Lower confidence for fallback
             'nlp_features': nlp_features
         }
     

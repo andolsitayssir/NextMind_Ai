@@ -134,6 +134,11 @@ LOGGING = {
             'level': 'CRITICAL',
             'propagate': False,
         },
+        'APP': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
     },
 }
 

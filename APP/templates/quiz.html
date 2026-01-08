@@ -469,7 +469,8 @@
         <div class="progress-section">
             <div class="progress-info">
                 <span class="progress-text">
-                    {% if session.language == 'fr' %}Progression{% elif session.language == 'en' %}Progress{% else %}التقدم{% endif %}
+                    {% if session.language == 'fr' %}Progression{% elif session.language == 'en' %}Progress{% else
+                    %}التقدم{% endif %}
                 </span>
                 <span class="progress-percentage">{{ progress }}%</span>
             </div>

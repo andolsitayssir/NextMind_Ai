@@ -7,7 +7,10 @@ import logging
 # Import new adaptive system
 from .adaptive_question_generator import AdaptiveQuestionGenerator
 from .nlp_scorer import NLPScorer
+from .adaptive_question_generator import AdaptiveQuestionGenerator
+from .nlp_scorer import NLPScorer
 from .ai_report_generator import AIReportGenerator
+from .models import Participant
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
@@ -90,6 +93,7 @@ def start_quiz(request):
     lang = request.session.get('language', 'fr')
     
     request.session['user_data'] = {
+        'full_name': request.POST.get('full_name', 'Anonymous') if request.method == 'POST' else 'Anonymous',
         'language': lang,
         'start_time': time.time(),
         'current_assessment': 'big_five',
@@ -399,6 +403,16 @@ def report(request):
                     request.session['user_data'] = user_data
                     request.session.modified = True
                     logger.info("Saved report results (potentially partial)")
+                    
+                    # PERSIST TO DATABASE
+                    try:
+                        Participant.objects.create(
+                            full_name=user_data.get('full_name', 'Anonymous'),
+                            report_data=results
+                        )
+                        logger.info(f"Successfully saved to Database for user: {user_data.get('full_name')}")
+                    except Exception as db_e:
+                        logger.error(f"Failed to save to Database: {db_e}")
                 else:
                     logger.warning("Generated results invalid (missing Big Five), not caching.")
                 

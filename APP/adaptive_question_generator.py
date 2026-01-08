@@ -5,6 +5,7 @@ Generates AI-powered questions that adapt based on previous answers
 import logging
 from .openrouter_client import OpenRouterClient
 from .trait_guidelines import get_trait_guidelines, get_scoring_guide
+from .evaluation_engine import EvaluationEngine
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +15,10 @@ class AdaptiveQuestionGenerator:
     
     def __init__(self):
         self.client = OpenRouterClient()
+        try:
+            self.evaluation_engine = EvaluationEngine()
+        except Exception:
+            self.evaluation_engine = None
     
     def generate_first_question(self, trait, assessment_type, language):
         """
@@ -146,6 +151,30 @@ Generate the question now (ONLY the question text, nothing else):"""
             
             # Clean up the response
             question = question.strip().strip('"').strip("'")
+            
+            # --- VALIDATION LOOP (New) ---
+            if self.evaluation_engine:
+                 is_good, critique = self.evaluation_engine.evaluate_question_quality(
+                     generated_question=question, 
+                     previous_answer=q1_answer, 
+                     trait=trait, 
+                     language=language
+                 )
+                 
+                 if not is_good:
+                     logger.warning(f"Validation failed for Q2 ({critique}). Retrying...")
+                     
+                     # Retry with critique
+                     retry_prompt = prompt + f"\n\nCRITIQUE FROM PREVIOUS ATTEMPT: {critique}\nFix the question to address this critique."
+                     
+                     question = self.client.generate(
+                        prompt=retry_prompt,
+                        model='reasoning',
+                        temperature=0.4
+                     )
+                     question = question.strip().strip('"').strip("'")
+                     logger.info(f"Retried Q2: {question[:50]}")
+            # -----------------------------
             
             logger.info(f"Generated adaptive Q2 for {trait} (score={q1_score}): {question[:50]}...")
             return question
